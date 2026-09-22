@@ -1,0 +1,15 @@
+import { cn } from "@/lib/utils";
+
+/** Cream plate, ink C, brick line through the opening. Header sits on ink. */
+export function Mark({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 32 32" className={cn("size-7", className)} aria-hidden="true">
+      <rect width="32" height="32" rx="7" className="fill-cream" />
+      <path
+        className="fill-ink"
+        d="M23.4 8.4c-1.8-1.6-4.3-2.5-7.6-2.5-6.8 0-11 4.1-11 10.1s4.2 10.1 11 10.1c3.3 0 5.8-.9 7.6-2.5l-2.6-2.8c-1.1 1-2.7 1.5-5 1.5-4.1 0-6.6-2.5-6.6-6.3s2.5-6.3 6.6-6.3c2.3 0 3.9.6 5 1.5l2.6-2.8z"
+      />
+      <rect x="15.6" y="13.7" width="10.6" height="4.6" rx="0.7" className="fill-brick" />
+    </svg>
+  );
+}

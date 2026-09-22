@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Expedite Consults LLC</title>
+    <meta name="description" content="Expedite Consults LLC — the clip, playing." />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700&family=Figtree:wght@500;600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --ink: #1c1916;
+        --cream: #f7f2e9;
+        --brick: #8b3d2a;
+      }
+      * { box-sizing: border-box; }
+      html, body {
+        margin: 0;
+        min-height: 100%;
+        background: var(--ink);
+        color: var(--cream);
+        font-family: Figtree, system-ui, sans-serif;
+      }
+      .stage {
+        min-height: 100dvh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 24px 16px calc(24px + env(safe-area-inset-bottom));
+      }
+      .plate {
+        position: relative;
+        width: min(22rem, 92vw);
+        aspect-ratio: 9 / 16;
+        background: #111;
+        border: 8px solid #efe8dc;
+        box-shadow: inset 0 0 0 1px #c9bfb0;
+        overflow: hidden;
+      }
+      .plate iframe, .plate img {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        border: 0;
+        object-fit: cover;
+        object-position: center 18%;
+      }
+      .shade {
+        pointer-events: none;
+        position: absolute;
+        inset: auto 0 0;
+        padding: 4.5rem 12px 0;
+        background: linear-gradient(to top, #1c1916, rgba(28,25,22,.75), transparent);
+      }
+      .name {
+        font-family: "Big Shoulders Display", "Arial Narrow", sans-serif;
+        font-size: 1.7rem;
+        letter-spacing: .04em;
+        margin: 0;
+      }
+      .title {
+        margin: .2rem 0 0;
+        font-size: .8rem;
+        opacity: .75;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .house {
+        margin-top: 10px;
+        padding: 8px 0;
+        text-align: right;
+        font-size: 10px;
+        font-weight: 600;
+        letter-spacing: .16em;
+      }
+      .go {
+        position: absolute;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        background: rgba(28,25,22,.28);
+        border: 0;
+        cursor: pointer;
+        color: var(--cream);
+      }
+      .go span {
+        width: 72px;
+        height: 72px;
+        border-radius: 999px;
+        background: var(--brick);
+        display: grid;
+        place-items: center;
+        font-size: 28px;
+      }
+      .mark {
+        position: absolute;
+        top: 12px;
+        left: 12px;
+        z-index: 2;
+        background: var(--brick);
+        padding: 6px 10px;
+        font-size: 10px;
+        font-weight: 600;
+        letter-spacing: .14em;
+      }
+      .foot {
+        margin-top: 14px;
+        font-size: 11px;
+        letter-spacing: .18em;
+        text-transform: uppercase;
+        opacity: .6;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="stage">
+      <article class="plate" id="plate">
+        <span class="mark">EXPEDITE CONSULTS LLC</span>
+        <img id="still" alt="" />
+        <div id="well"></div>
+        <div class="shade">
+          <p class="name">Expedite Consults LLC</p>
+          <p class="title" id="caption"></p>
+          <p class="house">EXPEDITE CONSULTS LLC</p>
+        </div>
+        <button class="go" id="go" type="button" aria-label="Play"><span>▶</span></button>
+      </article>
+      <p class="foot">ConnectLn · the hall</p>
+    </div>
+    <script>
+      (function () {
+        var q = new URLSearchParams(location.search);
+        var id = (q.get("v") || "").replace(/[^A-Za-z0-9_-]/g, "").slice(0, 11);
+        var title = q.get("t") || "Shop talk";
+        document.getElementById("caption").textContent = title;
+        document.title = "Expedite Consults LLC · " + title;
+        var still = document.getElementById("still");
+        var well = document.getElementById("well");
+        var go = document.getElementById("go");
+        if (!id || id.length !== 11) {
+          go.querySelector("span").textContent = "!";
+          return;
+        }
+        still.src = "https://i.ytimg.com/vi/" + id + "/hqdefault.jpg";
+        function play() {
+          var src =
+            "https://www.youtube-nocookie.com/embed/" +
+            id +
+            "?autoplay=1&mute=0&rel=0&modestbranding=1&playsinline=1&controls=0&fs=0&iv_load_policy=3";
+          well.innerHTML =
+            '<iframe src="' +
+            src +
+            '" allow="autoplay; encrypted-media; fullscreen" allowfullscreen title="Expedite Consults LLC"></iframe>';
+          go.style.display = "none";
+        }
+        go.addEventListener("click", play);
+        window.addEventListener("load", function () {
+          window.setTimeout(play, 240);
+        });
+      })();
+    </script>
+  </body>
+</html>
