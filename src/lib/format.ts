@@ -1,6 +1,7 @@
 import { format, formatDistanceToNow, parseISO } from "date-fns";
 import { isOshaStudent, oshaRecencyEnd } from "./osha";
 import type { Availability, Level, Person, Ticket, Trade } from "./types";
+import { groupOf } from "./scope";
 
 export function relTime(iso: string) {
   try {
@@ -105,36 +106,42 @@ export function yearsLabel(person: Person) {
       return `${person.years} years in practice`;
     case "Advisor":
       return `${person.years} years as a fiduciary`;
+    case "Bookkeeper":
+      return `${person.years} years on the books`;
+    case "Chef":
+      return `${person.years} years on the line`;
+    case "Truck driver":
+      return `${person.years} years on the road`;
+    case "Barber":
+      return `${person.years} years in the chair`;
+    case "Firefighter":
+      return `${person.years} years on the truck`;
+    case "Inspector":
+    case "Appraiser":
+      return `${person.years} years signing reports`;
+    case "Paramedic":
+    case "Dental hygienist":
+    case "Veterinarian":
+    case "Midwife":
+    case "Respiratory therapist":
+      return `${person.years} years in practice`;
     default:
       return `${person.years} years on the tools`;
   }
 }
 
 export function isTrades(trade: Trade) {
-  return !(
-    trade === "Nurse" ||
-    trade === "Physician" ||
-    trade === "Pharmacist" ||
-    trade === "Teacher" ||
-    trade === "Faculty" ||
-    trade === "Developer" ||
-    trade === "Realtor" ||
-    trade === "Agent" ||
-    trade === "Therapist" ||
-    trade === "Dentist" ||
-    trade === "Advisor"
-  );
+  return groupOf(trade) === "trades";
 }
 
 /** Thin material cue for the ID badge — brick / ok / warn / ink only. */
 export function tradeMark(trade: Trade, veteran?: boolean): { letter: string; tone: "brick" | "ok" | "warn" | "ink" } {
   const letter = trade.slice(0, 1).toUpperCase();
   if (veteran) return { letter, tone: "ink" };
-  if (trade === "Nurse" || trade === "Physician" || trade === "Pharmacist" || trade === "Therapist" || trade === "Dentist") {
-    return { letter, tone: "ok" };
-  }
-  if (trade === "Teacher" || trade === "Faculty") return { letter, tone: "warn" };
-  if (trade === "Developer" || trade === "Advisor") return { letter, tone: "ink" };
+  const group = groupOf(trade);
+  if (group === "care") return { letter, tone: "ok" };
+  if (group === "classroom") return { letter, tone: "warn" };
+  if (group === "money" || trade === "Developer") return { letter, tone: "ink" };
   return { letter, tone: "brick" };
 }
 

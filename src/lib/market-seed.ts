@@ -39,7 +39,7 @@ export const listings: Listing[] = [
     sellerId: "tomasz-kowalski",
     price: "$12",
     photo: "/sites/panel.jpg",
-    blurb: "For third-years who are tired of YouTube.",
+    blurb: "For third-years who are tired of watching it alone.",
     rating: 4.9,
     demo: true,
   },
@@ -130,7 +130,7 @@ export const listings: Listing[] = [
     stack: ["TypeScript", "Quizzes"],
     screenshots: ["/sites/hvac.jpg"],
     docs: "Ten items. Wrong answers tell you why. Score writes to the card.",
-    reviews: [{ by: "Keisha Owens", stars: 5, body: "Better than the YouTube with the stock footage." }],
+    reviews: [{ by: "Keisha Owens", stars: 5, body: "Better than a clip of stock footage." }],
   },
   {
     id: "l-shift",

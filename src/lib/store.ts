@@ -24,13 +24,16 @@ import { hallAddress, seedMail } from "./mail";
 import { smtpReady, EMPTY_SMTP, normalizeSmtp, type SmtpSettings } from "./smtp";
 import { saveMyCard } from "./accounts";
 import { isHallTheme, type HallTheme } from "./theme";
+import { isHallLang } from "./lang";
 import { CLIP_PULL_MS, CLIP_PULL_REV, type ClipPullReport } from "./clip-ingest";
 import { isExample } from "./example";
 import { scrubHallCopy, hallEnglish } from "./hall-lang";
 import { scrubYoutubeCopy } from "./clip-vet";
 import { TAKE, type LedgerLine } from "./money";
 import { canShiftSwap } from "./sos";
+import { toast } from "sonner";
 import { publishApply, publishCall, publishLine, publishVouch, type HallPayload } from "./hall";
+import { saveWatchNote } from "./watch-notes";
 import type {
   Availability,
   CallPrefs,
@@ -45,6 +48,17 @@ import type {
   VouchKind,
 } from "./types";
 
+type WatchNote = {
+  id: string;
+  at: string;
+  whoId: string;
+  whoName?: string;
+  email?: string;
+  action: "like" | "unlike" | "comment" | "repost" | "unrepost" | "study" | "meaning" | "send" | "meet";
+  target: string;
+  detail?: string;
+};
+
 type ForgeState = {
   people: Person[];
   posts: Post[];
@@ -52,6 +66,8 @@ type ForgeState = {
   threads: Thread[];
   vouches: Vouch[];
   likedPostIds: string[];
+  watchNotes: WatchNote[];
+  noteWatch: (action: WatchNote["action"], target: string, detail?: string) => void;
   savedCallIds: string[];
   appliedCallIds: string[];
   savedPersonIds: string[];
@@ -69,6 +85,7 @@ type ForgeState = {
   openedCard: boolean;
   loopDismissed: boolean;
   youId: string;
+  sessionEmail: string;
   hydrated: boolean;
   setHydrated: () => void;
   dismissIntro: () => void;
@@ -100,6 +117,7 @@ type ForgeState = {
     urgent?: boolean;
     apprentice?: boolean;
   }) => void;
+  ingestWire: (rows: CrewCall[]) => void;
   toggleSaveCall: (callId: string) => void;
   addVouch: (toId: string, body: string, site: string, kinds?: VouchKind[]) => void;
   updateYou: (patch: Partial<Person>) => void;
@@ -170,6 +188,8 @@ type ForgeState = {
   }) => void;
   hallTheme: HallTheme;
   setHallTheme: (theme: HallTheme) => void;
+  hallLang: import("./lang").HallLang;
+  setHallLang: (lang: import("./lang").HallLang) => void;
   reportStatus: Record<string, "pending" | "kept" | "pulled">;
   reports: Report[];
   fileReport: (row: Omit<Report, "id">) => void;
@@ -196,7 +216,7 @@ type ForgeState = {
   sessionRole: "member" | "desk" | null;
   dismissedNotices: string[];
   dismissNotice: (id: string) => void;
-  bindSession: (data: { userId: string; name: string; person: Person; role?: "member" | "desk" }) => void;
+  bindSession: (data: { userId: string; name: string; person: Person; role?: "member" | "desk"; email?: string }) => void;
   clearSession: () => void;
   mergeHall: (hall: HallPayload) => void;
   mergeMhcc: (people: Person[]) => void;
@@ -283,6 +303,7 @@ export const useForge = create<ForgeState>()(
       threads: seedThreads,
       vouches: seedVouches.map(withVouchKinds),
       likedPostIds: ["p2", "p6"],
+      watchNotes: [],
       savedCallIds: ["call-aurora"],
       appliedCallIds: [],
       savedPersonIds: ["tomasz-kowalski"],
@@ -298,6 +319,7 @@ export const useForge = create<ForgeState>()(
       openedCard: false,
       loopDismissed: false,
       youId: YOU_ID,
+      sessionEmail: "",
       hydrated: false,
       passedChallenges: [],
       gigModes: ["contract", "gigs"],
@@ -331,6 +353,7 @@ export const useForge = create<ForgeState>()(
       clipReports: [],
       clipStatus: {},
       hallTheme: "shop",
+      hallLang: "en",
       reportStatus: {},
       reports: [],
       pulledPostIds: [],
@@ -376,12 +399,25 @@ export const useForge = create<ForgeState>()(
         if (!get().openedCard) set({ openedCard: true });
       },
       dismissLoop: () => set({ loopDismissed: true }),
+      noteWatch: (action, target, detail) => {
+        void saveWatchNote({
+          data: { action, target: target.slice(0, 160), detail: detail?.slice(0, 2000) },
+        })
+          .then((row) => {
+            const note = { ...row, action } as WatchNote;
+            set({ watchNotes: [note, ...(get().watchNotes ?? []).filter((n) => n.id !== note.id)].slice(0, 400) });
+          })
+          .catch(() => {
+            toast("Sign in with your name. This is not kept in the browser.");
+          });
+      },
       dismissNotice: (id) => {
         if (get().dismissedNotices.includes(id)) return;
         set({ dismissedNotices: [...get().dismissedNotices, id] });
       },
       toggleLike: (postId) => {
         const liked = get().likedPostIds.includes(postId);
+        get().noteWatch(liked ? "unlike" : "like", postId);
         set({
           likedPostIds: liked
             ? get().likedPostIds.filter((id) => id !== postId)
@@ -394,6 +430,7 @@ export const useForge = create<ForgeState>()(
       addComment: (postId, body) => {
         const trimmed = body.trim();
         if (!trimmed) return;
+        get().noteWatch("comment", postId, trimmed);
         set({
           posts: get().posts.map((p) =>
             p.id === postId
@@ -440,6 +477,7 @@ export const useForge = create<ForgeState>()(
       },
       boostPost: (postId) => {
         const on = get().boostedPostIds.includes(postId);
+        get().noteWatch(on ? "unrepost" : "repost", postId);
         set({
           boostedPostIds: on
             ? get().boostedPostIds.filter((id) => id !== postId)
@@ -665,6 +703,19 @@ export const useForge = create<ForgeState>()(
           ],
         });
         get().logAudit(`Take · listing · $${listing}`);
+      },
+      ingestWire: (rows) => {
+        const kept = get().calls.filter((c) => !c.wire);
+        const seen = new Set(kept.map((c) => `${c.shop}|${c.title}`.toLowerCase()));
+        const fresh = rows.filter((row) => {
+          if (!row.wire || !row.listingUrl) return false;
+          const key = `${row.shop}|${row.title}`.toLowerCase();
+          if (seen.has(key)) return false;
+          seen.add(key);
+          return true;
+        });
+        if (!fresh.length && get().calls.some((c) => c.wire)) return;
+        set({ calls: [...fresh, ...kept] });
       },
       toggleSaveCall: (callId) => {
         const saved = get().savedCallIds.includes(callId);
@@ -1006,10 +1057,10 @@ export const useForge = create<ForgeState>()(
         const youtube = scrubYoutubeCopy(merged.posts, merged.reels);
         const clipStatus = { ...get().clipStatus };
         for (const p of incoming) {
-          if (p.youtube && !clipStatus[p.youtube]) clipStatus[p.youtube] = "pending";
+          if (p.youtube && !clipStatus[p.youtube]) clipStatus[p.youtube] = "live";
         }
         for (const r of incomingReels) {
-          if (r.youtube && !clipStatus[r.youtube]) clipStatus[r.youtube] = "pending";
+          if (r.youtube && !clipStatus[r.youtube]) clipStatus[r.youtube] = "live";
         }
         set({
           people: merged.people,
@@ -1025,6 +1076,7 @@ export const useForge = create<ForgeState>()(
         set({ hallTheme: theme });
         document.documentElement.dataset.theme = theme;
       },
+      setHallLang: (lang) => set({ hallLang: lang }),
       toggleReelLike: (id) => {
         const has = get().likedReelIds.includes(id);
         set({
@@ -1128,6 +1180,8 @@ export const useForge = create<ForgeState>()(
       confirmGoal: () => set({ goalConfirmedAt: new Date().toISOString() }),
       setCardLayout: (cardLayout) => set({ cardLayout }),
       bindSession: (data) => {
+        const email = data.email?.trim().toLowerCase();
+        if (email && email !== get().sessionEmail) set({ sessionEmail: email });
         const role = data.role ?? "member";
         const existing = get().people.find((p) => p.id === data.userId);
         const name = data.name || existing?.name || "New member";
@@ -1146,6 +1200,7 @@ export const useForge = create<ForgeState>()(
           : { ...data.person, id: data.userId, name, photo, example: false, lastSeen: new Date().toISOString() };
         set({
           youId: data.userId,
+          sessionEmail: data.email?.trim().toLowerCase() || get().sessionEmail,
           sessionRole: role,
           people: existing
             ? get().people.map((p) => (p.id === data.userId ? person : p))
@@ -1154,7 +1209,7 @@ export const useForge = create<ForgeState>()(
       },
       clearSession: () => {
         if (get().sessionRole === null && get().youId === YOU_ID) return;
-        set({ youId: YOU_ID, sessionRole: null });
+        set({ youId: YOU_ID, sessionEmail: "", sessionRole: null });
       },
       mergeHall: (hall) => {
         if (!hall) return;
@@ -1344,6 +1399,10 @@ export const useForge = create<ForgeState>()(
           followBody: ai.followBody,
           audio: input.audio,
         };
+        if (input.kind === "meet" || input.kind === "call") {
+          const said = [input.transcript, ai.summary].filter(Boolean).join(" — ");
+          get().noteWatch("meet", them.name, said || `Room with ${them.name}`);
+        }
         const actions: CrmAction[] = ai.actions.map((title) => ({
           id: nid("act"),
           personId: them.id,
@@ -1407,12 +1466,16 @@ export const useForge = create<ForgeState>()(
           ...p,
           people: clean.people,
           posts: clean.posts,
+          calls: mergeById(current.calls, p.calls ?? []),
+          threads: mergeById(current.threads, p.threads ?? []),
           extraReels: clean.reels,
           wheelResume: p.wheelResume ?? current.wheelResume,
           clipIngestedAt: (p.extraReels ?? []).some((r) => r.youtube)
             ? (p.clipIngestedAt ?? current.clipIngestedAt)
             : undefined,
           youId: current.youId,
+          sessionEmail: p.sessionEmail ?? current.sessionEmail,
+          watchNotes: current.watchNotes,
           sessionRole: current.sessionRole,
           hydrated: current.hydrated,
           contracts: p.contracts ?? current.contracts,
@@ -1441,6 +1504,7 @@ export const useForge = create<ForgeState>()(
           clipReports: p.clipReports?.length ? p.clipReports : current.clipReports,
           clipStatus: p.clipStatus ?? current.clipStatus,
           hallTheme: isHallTheme(p.hallTheme) ? p.hallTheme : current.hallTheme,
+          hallLang: isHallLang(p.hallLang) ? p.hallLang : current.hallLang,
           reports: p.reports ?? current.reports,
           pulledPostIds: p.pulledPostIds ?? current.pulledPostIds,
           savedPersonIds: p.savedPersonIds ?? current.savedPersonIds,
@@ -1468,10 +1532,11 @@ export const useForge = create<ForgeState>()(
           })
           .slice(0, 200)
           .map((p) => (p.video?.startsWith("blob:") ? { ...p, video: undefined } : p)),
-        calls: s.calls.filter((c) => !SEED_CALL_IDS.has(c.id)),
+        calls: s.calls.filter((c) => !SEED_CALL_IDS.has(c.id) && !c.wire),
         threads: s.threads,
         vouches: s.vouches,
         likedPostIds: s.likedPostIds,
+        sessionEmail: s.sessionEmail,
         boostedPostIds: s.boostedPostIds,
         savedCallIds: s.savedCallIds,
         appliedCallIds: s.appliedCallIds,
@@ -1515,6 +1580,7 @@ export const useForge = create<ForgeState>()(
         clipReports: s.clipReports.slice(0, 3),
         clipStatus: s.clipStatus,
         hallTheme: s.hallTheme,
+        hallLang: s.hallLang,
         likedReelIds: s.likedReelIds,
         reportStatus: s.reportStatus,
         reports: s.reports,

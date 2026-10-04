@@ -47,10 +47,14 @@ function SearchPage() {
   const toggleSaveCall = useForge((s) => s.toggleSaveCall);
   const savedCallIds = useForge((s) => s.savedCallIds);
 
-  const hits = useMemo(
-    () => (q ? searchBoard(q, people, posts, calls, extra, pulled, you?.trade) : []),
-    [q, people, posts, calls, extra, pulled, you?.trade],
-  );
+  const hits = useMemo(() => {
+    if (!q) return [];
+    try {
+      return searchBoard(q, people, posts, calls, extra, pulled, you?.trade);
+    } catch {
+      return [];
+    }
+  }, [q, people, posts, calls, extra, pulled, you?.trade]);
   const visible = kind === "all" ? hits : hits.filter((h) => h.kind === kind);
   const counts = useMemo(() => {
     const c: Partial<Record<HitKind, number>> = {};

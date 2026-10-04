@@ -29,6 +29,12 @@ export function hallLabel(trade: Trade) {
       return "Dentists";
     case "Advisor":
       return "Advisors";
+    case "Lineman":
+      return "Linemen";
+    case "Sheet metal":
+      return "Sheet metal";
+    case "Midwife":
+      return "Midwives";
     case "HVAC":
       return "HVAC";
     default:

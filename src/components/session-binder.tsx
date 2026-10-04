@@ -4,6 +4,7 @@ import { ensureMyAccount, touchPresence } from "@/lib/accounts";
 import { blankPerson } from "@/lib/blank-person";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
 import { useForge } from "@/lib/store";
+import { loadMyWatchNotes } from "@/lib/watch-notes";
 
 /** One login → one card. Jordan stays on the board; he is not "you". */
 export function SessionBinder() {
@@ -23,6 +24,7 @@ export function SessionBinder() {
     }
 
     const name = user.displayName?.trim() || user.primaryEmail || "New member";
+    const email = user.primaryEmail?.trim().toLowerCase() || "";
     const fallback = blankPerson({ id: user.id, name });
     if (user.profileImageUrl) fallback.photo = user.profileImageUrl;
     const wantDesk = Boolean(onCommand || user.isDevFallback);
@@ -34,6 +36,7 @@ export function SessionBinder() {
         name,
         person: fallback,
         role: wantDesk ? "desk" : "member",
+        email,
       });
     } else if (wantDesk && useForge.getState().sessionRole !== "desk") {
       useForge.getState().bindSession({
@@ -41,8 +44,26 @@ export function SessionBinder() {
         name: useForge.getState().people.find((p) => p.id === user.id)?.name || name,
         person: useForge.getState().people.find((p) => p.id === user.id) ?? fallback,
         role: "desk",
+        email,
+      });
+    } else if (email) {
+      useForge.getState().bindSession({
+        userId: user.id,
+        name: useForge.getState().people.find((p) => p.id === user.id)?.name || name,
+        person: useForge.getState().people.find((p) => p.id === user.id) ?? fallback,
+        role: useForge.getState().sessionRole === "desk" ? "desk" : "member",
+        email,
       });
     }
+
+    void loadMyWatchNotes()
+      .then((rows) => {
+        const cur = useForge.getState().watchNotes;
+        useForge.setState({
+          watchNotes: rows.map((r) => ({ ...r, action: r.action as (typeof cur)[number]["action"] })),
+        });
+      })
+      .catch(() => undefined);
 
     void ensureMyAccount({ data: { requestedSeat: wantDesk ? "desk" : "member" } })
       .then((acc) => {
@@ -52,13 +73,14 @@ export function SessionBinder() {
           name: acc.name?.trim() || name,
           person: { ...acc.person, name: acc.person.name?.trim() || acc.name?.trim() || name },
           role: wantDesk ? "desk" : acc.role,
+          email: email || acc.person.reachEmail?.trim().toLowerCase(),
         });
         useForge.getState().pulseSeen();
       })
       .catch(() => {
         useForge.getState().pulseSeen();
       });
-  }, [user?.id, isPending, onCommand]);
+  }, [user?.id, user?.primaryEmail, isPending, onCommand]);
 
   useEffect(() => {
     if (isPending || !user) return;

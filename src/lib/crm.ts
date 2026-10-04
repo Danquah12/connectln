@@ -94,6 +94,61 @@ const PACK: Record<Trade, Pack> = {
     actions: ["Confirm mechanic ticket", "Send building access", "Ask last modernization"],
     follow: "Following the line. Ticket, access, last job. Reply with the window.",
   },
+  Lineman: {
+    opener: "the climb, the ticket, the utility or the contractor",
+    actions: ["Confirm the journeyman card", "Send the pole or the yard", "Ask who vouches the last hot job"],
+    follow: "Following the line. Card, yard, who vouches. Reply if you can climb.",
+  },
+  Pipefitter: {
+    opener: "the NCCER card, the system, the turnaround window",
+    actions: ["Confirm pipefitting level", "Send the system and the outage", "Ask last steam or process job"],
+    follow: "Following the line. Card, system, window. Reply if you can take it.",
+  },
+  "Sheet metal": {
+    opener: "the layout, the fitting, the install",
+    actions: ["Confirm the journeyman card", "Send the drawing", "Ask who ran the last shop"],
+    follow: "Following the line. Card, drawing, shop. Reply if you can lay out.",
+  },
+  Mason: {
+    opener: "the wall, the mortar, the hours on the trowel",
+    actions: ["Confirm the masonry ticket", "Send the wall and the mix", "Ask last restoration"],
+    follow: "Following the line. Ticket, wall, mix. Reply if you have laid this.",
+  },
+  Roofer: {
+    opener: "the slope, the fall protection, the crew",
+    actions: ["Confirm fall protection", "Send the roof and the start", "Ask who vouches the last steep job"],
+    follow: "Following the line. Harness, roof, start. Reply if you can go up.",
+  },
+  "Sprinkler fitter": {
+    opener: "the system, the UA card, the heads",
+    actions: ["Confirm the fitter apprenticeship", "Send wet or dry and the floor", "Ask last tenant finish"],
+    follow: "Following the line. Card, system, floor. Reply if you have hung heads.",
+  },
+  Machinist: {
+    opener: "the print, the tolerance, the machine",
+    actions: ["Confirm the shop hours", "Send the print", "Ask manual or CNC"],
+    follow: "Following the line. Print, machine, hours. Reply if you can hold it.",
+  },
+  "Diesel technician": {
+    opener: "the ASE card, the fleet, what is actually down",
+    actions: ["Confirm ASE diesel", "Send the unit and the fault", "Ask last aftertreatment job"],
+    follow: "Following the line. ASE, unit, fault. Reply if you can take the truck.",
+  },
+  Chef: {
+    opener: "the station, the covers, who has run the line",
+    actions: ["Confirm the kitchen years", "Send the station and the service", "Ask last house"],
+    follow: "Following the line. Station, service, last house. Reply if you can hold it.",
+  },
+  "Truck driver": {
+    opener: "the CDL, the lane, the MVR",
+    actions: ["Confirm Class A", "Send the lane and home time", "Ask endorsements if the freight needs them"],
+    follow: "Following the line. CDL, lane, home time. Reply if the MVR is clean.",
+  },
+  Barber: {
+    opener: "the license on the wall, the chair, the book",
+    actions: ["Confirm the state license", "Send the chair and the split", "Ask last shop"],
+    follow: "Following the line. License, chair, split. Reply if you can take it.",
+  },
   Nurse: {
     opener: "the compact, the unit, the block they can take",
     actions: ["Confirm compact / ACLS", "Send unit and shift", "Ask last hospital"],
@@ -145,6 +200,51 @@ const PACK: Record<Trade, Pack> = {
     opener: "the chair, the license, Thursday coverage",
     actions: ["Confirm DDS / DEA", "Send chair hours", "Ask Medicaid if they claimed it"],
     follow: "Following the line. License, chair hours. Reply if you can cover.",
+  },
+  Paramedic: {
+    opener: "the registry, the truck, the block",
+    actions: ["Confirm National Registry", "Send the shift", "Ask last service"],
+    follow: "Following the line. Registry, shift, last service. Reply if you can take the truck.",
+  },
+  "Dental hygienist": {
+    opener: "the RDH, the column, the state permit",
+    actions: ["Confirm the hygiene license", "Send the columns", "Ask local anesthesia if the state wants it"],
+    follow: "Following the line. License, columns, permit. Reply if you can take the week.",
+  },
+  Veterinarian: {
+    opener: "the DVM, the license, the relief day",
+    actions: ["Confirm the state license", "Send the practice and the day", "Ask DEA if they will write"],
+    follow: "Following the line. License, day, DEA. Reply if you can cover.",
+  },
+  Midwife: {
+    opener: "the CNM, the coverage, the hospital or the birth center",
+    actions: ["Confirm CNM", "Send nights and the unit", "Ask last privileges"],
+    follow: "Following the line. CNM, nights, privileges. Reply if you can cover.",
+  },
+  "Respiratory therapist": {
+    opener: "the RRT, the vents, the night",
+    actions: ["Confirm RRT", "Send the unit", "Ask last ICU"],
+    follow: "Following the line. RRT, unit, night. Reply if you can take it.",
+  },
+  Firefighter: {
+    opener: "the academy seal, the EMT, the lateral",
+    actions: ["Confirm the state seal", "Send the department", "Ask EMT card"],
+    follow: "Following the line. Seal, EMT, department. Reply if you can test.",
+  },
+  Inspector: {
+    opener: "the ICC cards, the discipline, the department",
+    actions: ["Confirm the inspector exams", "Send residential or commercial", "Ask last jurisdiction"],
+    follow: "Following the line. Cards, discipline, jurisdiction. Reply with what you can sign.",
+  },
+  Appraiser: {
+    opener: "the state credential, the file, the supervisor hours",
+    actions: ["Confirm certified residential or general", "Send the file type", "Ask the board"],
+    follow: "Following the line. Credential, file, board. Reply if you can take the month.",
+  },
+  Bookkeeper: {
+    opener: "the books, the software, the sales tax",
+    actions: ["Confirm the shops they keep", "Send the ledger and the cadence", "Ask CPA or not"],
+    follow: "Following the line. Books, software, tax. Reply if you can take the two shops.",
   },
   Advisor: {
     opener: "the CFP, the book, the next review",

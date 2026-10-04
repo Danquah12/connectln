@@ -2,6 +2,8 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useRef } from "react";
 import { HOUSE, HOUSE_NAME } from "@/components/work-frame";
 import { YoutubeStage } from "@/components/youtube-stage";
+import { ClipRail } from "@/components/clip-rail";
+import { FilmNotes } from "@/components/film-notes";
 import { youtubeId, youtubeThumb } from "@/lib/youtube";
 import { personById, useForge } from "@/lib/store";
 
@@ -38,30 +40,37 @@ function WatchPage() {
           Back to the hall
         </Link>
       </div>
-      <div className="relative aspect-video w-full bg-ink sm:aspect-auto sm:min-h-[28rem]">
-        {clip.youtube ? (
-          <YoutubeStage
-            id={clip.youtube}
-            title={clip.title}
-            autoplay
-            mute={false}
-            still={clip.still}
-            frameRef={frame}
-          />
-        ) : clip.video ? (
-          <video
-            src={clip.video}
-            poster={clip.still}
-            className="absolute inset-0 size-full object-contain bg-ink"
-            controls
-            autoPlay
-            playsInline
-          />
-        ) : (
-          <div className="grid size-full place-items-center px-6 text-center text-sm text-cream/70">
-            No clip on this plate yet.
+      <div className="grid items-start gap-3 px-3 lg:grid-cols-[minmax(0,1fr)_18.5rem]">
+        <div className="min-w-0">
+          <div className="hall-fit-tall max-w-full">
+            {clip.youtube ? (
+              <YoutubeStage
+                id={clip.youtube}
+                title={clip.title}
+                autoplay
+                mute={false}
+                still={clip.still}
+                frameRef={frame}
+                chrome
+              />
+            ) : clip.video ? (
+              <video
+                src={clip.video}
+                poster={clip.still}
+                className="absolute inset-0 size-full object-contain bg-ink"
+                controls
+                autoPlay
+                playsInline
+              />
+            ) : (
+              <div className="grid size-full place-items-center px-6 text-center text-sm text-cream/70">
+                No clip on this plate yet.
+              </div>
+            )}
           </div>
-        )}
+          <ClipRail meaning={clip.title} clipId={clip.youtube || id} />
+        </div>
+        <FilmNotes text={clip.title} title={clip.title} className="mb-4" />
       </div>
       <div className="px-4 py-4">
         <p className="font-display text-3xl tracking-wide">{HOUSE_NAME}</p>

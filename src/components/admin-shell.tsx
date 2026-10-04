@@ -14,6 +14,7 @@ export const COMMAND_NAVS: { id: string; label: string; group: string }[] = [
   { id: "clips", label: "Synced", group: "Operate" },
   { id: "seats", label: "Seats", group: "Operate" },
   { id: "queue", label: "Queue", group: "Operate" },
+  { id: "notes", label: "Notes", group: "Operate" },
   { id: "tickets", label: "Tickets", group: "Work" },
   { id: "calls", label: "Calls", group: "Work" },
   { id: "contracts", label: "Contracts", group: "Work" },

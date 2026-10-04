@@ -43,7 +43,16 @@
         box-shadow: inset 0 0 0 1px #c9bfb0;
         overflow: hidden;
       }
-      .plate iframe, .plate img {
+      .plate iframe {
+        position: absolute;
+        top: -8%;
+        left: -2%;
+        width: 116%;
+        height: 122%;
+        border: 0;
+        pointer-events: none;
+      }
+      .plate img {
         position: absolute;
         inset: 0;
         width: 100%;
@@ -51,6 +60,17 @@
         border: 0;
         object-fit: cover;
         object-position: center 18%;
+      }
+      .plate:after {
+        content: "";
+        position: absolute;
+        right: 0;
+        bottom: 0;
+        z-index: 2;
+        width: 7rem;
+        height: 2.75rem;
+        background: var(--ink);
+        pointer-events: none;
       }
       .shade {
         pointer-events: none;
@@ -105,12 +125,18 @@
         top: 12px;
         left: 12px;
         z-index: 2;
-        background: var(--brick);
-        padding: 6px 10px;
-        font-size: 10px;
-        font-weight: 600;
-        letter-spacing: .14em;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        background: rgba(28, 25, 22, 0.9);
+        color: var(--cream);
+        padding: 4px 8px 4px 4px;
+        font-family: "Big Shoulders Display", "Arial Narrow", sans-serif;
+        font-size: 18px;
+        letter-spacing: 0.06em;
+        line-height: 1;
       }
+      .mark svg { width: 22px; height: 22px; display: block; }
       .foot {
         margin-top: 14px;
         font-size: 11px;
@@ -123,7 +149,7 @@
   <body>
     <div class="stage">
       <article class="plate" id="plate">
-        <span class="mark">EXPEDITE CONSULTS LLC</span>
+        <span class="mark"><svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="7" fill="#f7f2e9"/><path fill="#1c1916" d="M23.4 8.4c-1.8-1.6-4.3-2.5-7.6-2.5-6.8 0-11 4.1-11 10.1s4.2 10.1 11 10.1c3.3 0 5.8-.9 7.6-2.5l-2.6-2.8c-1.1 1-2.7 1.5-5 1.5-4.1 0-6.6-2.5-6.6-6.3s2.5-6.3 6.6-6.3c2.3 0 3.9.6 5 1.5l2.6-2.8z"/><rect x="15.6" y="13.7" width="10.6" height="4.6" rx="0.7" fill="#8b3d2a"/></svg>ConnectLn</span>
         <img id="still" alt="" />
         <div id="well"></div>
         <div class="shade">
@@ -158,7 +184,7 @@
           well.innerHTML =
             '<iframe src="' +
             src +
-            '" allow="autoplay; encrypted-media; fullscreen" allowfullscreen title="Expedite Consults LLC"></iframe>';
+            '" allow="autoplay; encrypted-media" title="ConnectLn"></iframe>';
           go.style.display = "none";
         }
         go.addEventListener("click", play);

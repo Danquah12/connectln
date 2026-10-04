@@ -2,7 +2,13 @@ import { Link } from "@tanstack/react-router";
 import { cn } from "@/lib/utils";
 import { cardName, initials, tradeMark } from "@/lib/format";
 import { presenceOf } from "@/lib/presence";
+import { clipPosters } from "@/lib/clip-posters";
 import type { Person } from "@/lib/types";
+
+function shownFace(person: Person) {
+  if (person.photo && !person.photo.startsWith("/portraits/")) return person.photo;
+  return clipPosters.find((p) => p.trade === person.trade)?.photo || person.photo;
+}
 
 export function Portrait({
   person,
@@ -40,9 +46,9 @@ export function Portrait({
       <span className={cn("id-badge inline-flex size-full overflow-hidden bg-ink", className)}>
         <span className={cn("id-badge-bar", mark.tone)} aria-hidden />
         <span className={cn("id-badge-ear", mark.tone)} aria-hidden />
-        {person.photo ? (
+        {shownFace(person) ? (
           <img
-            src={person.photo}
+            src={shownFace(person)}
             alt=""
             className="size-full object-cover object-top"
             crossOrigin="anonymous"

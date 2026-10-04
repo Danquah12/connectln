@@ -1,6 +1,7 @@
 import { useEffect, type ReactNode } from "react";
 import { Volume2 } from "lucide-react";
 import { TRADE_GROUPS, TRADES } from "@/lib/seed";
+import { callingPeople, callingPosts } from "@/lib/callings";
 import { talkAudio } from "@/lib/talk-scripts";
 import { playHallVoice, stopHallVoice } from "@/lib/voice-bus";
 import type { FieldGroup, Trade } from "@/lib/types";
@@ -23,7 +24,7 @@ const HALL_MEDIA: Record<"all" | FieldGroup, { still: string; video?: string; la
   build: { still: "/reels/talk-lena.jpg", video: "/reels/talk-lena.mp4", label: "Builders", personId: "lena-cho" },
 };
 
-const TICKET_MEDIA: Record<Trade, { still: string; video?: string; who: string; personId: string }> = {
+const TICKET_MEDIA: Partial<Record<Trade, { still: string; video?: string; who: string; personId: string }>> = {
   Electrician: { still: "/reels/talk-jordan.jpg", video: "/reels/talk-jordan.mp4", who: "Jordan Hale", personId: "jordan-hale" },
   Plumber: { still: "/reels/talk-marisol.jpg", video: "/reels/talk-marisol.mp4", who: "Marisol Vega", personId: "marisol-vega" },
   HVAC: { still: "/reels/talk-patty.jpg", video: "/reels/talk-patty.mp4", who: "Patty Nguyen", personId: "patty-nguyen" },
@@ -46,6 +47,18 @@ const TICKET_MEDIA: Record<Trade, { still: string; video?: string; who: string; 
   Dentist: { still: "/reels/talk-omar.jpg", video: "/reels/talk-omar.mp4", who: "Omar Haddad", personId: "omar-haddad" },
   Advisor: { still: "/reels/talk-grace.jpg", video: "/reels/talk-grace.mp4", who: "Grace Okonkwo", personId: "grace-okonkwo" },
 };
+
+function ticketFace(trade: Trade) {
+  const known = TICKET_MEDIA[trade];
+  if (known) return known;
+  const person = callingPeople.find((p) => p.trade === trade);
+  const post = callingPosts.find((p) => p.authorId === person?.id);
+  return {
+    still: post?.photo || person?.photo || "/sites/hall.jpg",
+    who: person?.name ?? trade,
+    personId: person?.id ?? "",
+  };
+}
 
 function hearPerson(personId?: string) {
   const src = personId ? talkAudio(personId) : "";
@@ -129,7 +142,7 @@ export function BoardFilters({
     group === "all" ? TRADES : (TRADE_GROUPS.find((g) => g.id === group)?.trades ?? TRADES);
   const hallName = halls.find((h) => h.id === group)?.label ?? "All";
   const speakingId =
-    trade !== "all" ? TICKET_MEDIA[trade].personId : group !== "all" ? HALL_MEDIA[group].personId : undefined;
+    trade !== "all" ? ticketFace(trade).personId : group !== "all" ? HALL_MEDIA[group].personId : undefined;
 
   useEffect(() => {
     return () => stopHallVoice();
@@ -143,10 +156,7 @@ export function BoardFilters({
             <button
               key={h.id}
               type="button"
-              onClick={() => {
-                onGroup(h.id);
-                onTrade("all");
-              }}
+              onClick={() => onGroup(h.id)}
               className={cn(
                 "h-9 rounded-full px-3 text-sm font-medium",
                 group === h.id ? "bg-ink text-cream" : "bg-canvas text-muted-foreground",
@@ -156,33 +166,40 @@ export function BoardFilters({
             </button>
           ))}
         </div>
-        {tickets.length > 0 ? (
-          <div className="mt-2 flex flex-wrap gap-1.5">
-            <button
-              type="button"
-              onClick={() => onTrade("all")}
-              className={cn(
-                "h-9 rounded-full px-3 text-sm",
-                trade === "all" ? "bg-ink text-cream" : "bg-canvas text-muted-foreground",
-              )}
-            >
-              All in {hallName}
-            </button>
-            {tickets.map((t) => (
-              <button
-                key={t}
-                type="button"
-                onClick={() => onTrade(t)}
-                className={cn(
-                  "h-9 rounded-full px-3 text-sm",
-                  trade === t ? "bg-ink text-cream" : "bg-canvas text-muted-foreground",
-                )}
-              >
-                {t}
-              </button>
-            ))}
-          </div>
-        ) : null}
+        <div className="mt-3 flex flex-col gap-3">
+          {(group === "all" ? TRADE_GROUPS : TRADE_GROUPS.filter((g) => g.id === group)).map((hall) => (
+            <div key={hall.id}>
+              <p className="mb-1.5 text-[11px] font-medium tracking-[0.16em] text-muted-foreground uppercase">
+                {hall.label}
+              </p>
+              <div className="flex flex-wrap gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => onGroup(hall.id)}
+                  className={cn(
+                    "h-9 rounded-full px-3 text-sm",
+                    group === hall.id && trade === "all" ? "bg-ink text-cream" : "bg-canvas text-muted-foreground",
+                  )}
+                >
+                  All in {hall.label}
+                </button>
+                {hall.trades.map((t) => (
+                  <button
+                    key={t}
+                    type="button"
+                    onClick={() => onTrade(t)}
+                    className={cn(
+                      "h-9 rounded-full px-3 text-sm",
+                      trade === t ? "bg-ink text-cream" : "bg-canvas text-muted-foreground",
+                    )}
+                  >
+                    {t}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
         {flags && flags.length > 0 ? (
           <div className="mt-3 flex flex-wrap gap-1.5">
             {flags.map((f) => (
@@ -220,7 +237,6 @@ export function BoardFilters({
               type="button"
               onClick={() => {
                 onGroup(h.id);
-                onTrade("all");
                 hearPerson(media.personId);
               }}
               className={cn(
@@ -255,7 +271,7 @@ export function BoardFilters({
                 active={trade === t}
                 onClick={() => {
                   onTrade(t);
-                  hearPerson(TICKET_MEDIA[t].personId);
+                  hearPerson(ticketFace(t).personId);
                 }}
               >
                 {t}
@@ -264,7 +280,7 @@ export function BoardFilters({
           </div>
           <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
             {tickets.map((t) => {
-              const media = TICKET_MEDIA[t];
+              const media = ticketFace(t);
               const live = speakingId === media.personId && trade === t;
               return (
                 <button

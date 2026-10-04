@@ -14,7 +14,9 @@ import { HOUSE_BILL, TAKE } from "@/lib/money";
 import { personById, useForge } from "@/lib/store";
 import { useShopSeat } from "@/components/shop-lock";
 import { cn } from "@/lib/utils";
-import type { CrewCall } from "@/lib/types";
+import { seatOf } from "@/lib/calling";
+import { groupOf } from "@/lib/scope";
+import type { CrewCall, FieldGroup, Trade } from "@/lib/types";
 
 function hitTone(status: TicketHit) {
   if (status === "have") return "text-ok";
@@ -30,7 +32,15 @@ function hitWord(status: TicketHit) {
   return "missing";
 }
 
-export function CallCard({ call }: { call: CrewCall }) {
+export function CallCard({
+  call,
+  only = "all",
+  hall = "all",
+}: {
+  call: CrewCall;
+  only?: Trade | "all";
+  hall?: "all" | FieldGroup;
+}) {
   const applyToCall = useForge((s) => s.applyToCall);
   const referOnCall = useForge((s) => s.referOnCall);
   const [referOpen, setReferOpen] = useState(false);
@@ -51,6 +61,10 @@ export function CallCard({ call }: { call: CrewCall }) {
   const open = Math.max(0, call.spots - hired.length);
   const fit = you && !mine ? fitScore(you, call, vouches) : null;
   const ranked = mine ? rankHands(hands, people, call, vouches) : [];
+  const seat = seatOf(call);
+  if (!seat) return null;
+  if (only !== "all" && seat !== only) return null;
+  if (only === "all" && hall !== "all" && groupOf(seat) !== hall) return null;
 
   return (
     <article
@@ -69,8 +83,9 @@ export function CallCard({ call }: { call: CrewCall }) {
         <div className="flex items-start justify-between gap-3">
           <div>
             <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-              {call.trade} · {call.shop}
+              {seat} · {call.shop}
               {call.urgent ? " · SOS" : ""}
+              {call.wire ? ` · ${call.source ?? "Opening"}` : ""}
               {call.shift ? " · Shift" : ""}
               {call.apprentice ? " · Apprentice" : ""}
               {isExampleCall(call) ? <ExampleMark className="ml-2 align-middle" /> : null}
@@ -137,21 +152,24 @@ export function CallCard({ call }: { call: CrewCall }) {
         {!mine ? (
           <div className="mt-4 flex items-center gap-2">
             <Button
-              disabled={applied || open === 0 || Boolean(fit?.blocked)}
+              disabled={applied || (!call.wire && (open === 0 || Boolean(fit?.blocked)))}
               onClick={() => {
+                if (call.listingUrl) window.open(call.listingUrl, "_blank", "noopener,noreferrer");
                 applyToCall(call.id);
-                toast("Hand raised. Shop sees tickets, not a résumé.");
+                toast(call.wire ? "Card noted. The listing is open." : "Hand raised. Shop sees tickets, not a résumé.");
               }}
             >
               {applied
                 ? "Hand raised"
-                : open === 0
-                  ? "Crew full"
-                  : fit?.blocked
-                    ? "Tickets fail"
-                    : call.shift
-                      ? "Claim shift"
-                      : "You qualify — raise hand"}
+                : call.wire
+                  ? "Send your card"
+                  : open === 0
+                    ? "Crew full"
+                    : fit?.blocked
+                      ? "Tickets fail"
+                      : call.shift
+                        ? "Claim shift"
+                        : "You qualify — raise hand"}
             </Button>
             {fit?.blocked ? (
               <Button variant="outline" asChild>

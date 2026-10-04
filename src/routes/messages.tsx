@@ -176,9 +176,14 @@ function MessagesPage() {
                 >
                   <Portrait person={who} size="sm" link={false} />
                   <span className="min-w-0 flex-1">
-                    <span className="block truncate text-sm font-medium">{who.name}</span>
+                    <span className="flex items-baseline justify-between gap-2">
+                      <span className="truncate text-sm font-medium">{who.name}</span>
+                      <span className="shrink-0 text-[11px] text-muted-foreground">
+                        {last ? relTime(last.createdAt) : ""}
+                      </span>
+                    </span>
                     <span className="block truncate text-[11px] text-muted-foreground">
-                      {presenceLabel(who)} · {last?.body}
+                      {last?.body}
                     </span>
                   </span>
                 </button>

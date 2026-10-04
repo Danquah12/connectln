@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { ChevronLeft, ChevronRight, Pause, Play, Volume2, VolumeX, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, Pause, Play, Volume2, VolumeX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { seedReels } from "@/lib/reel-seed";
 import { hallContact } from "@/lib/contact";
@@ -9,16 +9,19 @@ import { MailCompose } from "@/components/mail-compose";
 import { VoiceNote } from "@/components/voice-note";
 import { isExample, hallRoster } from "@/lib/example";
 import { hallClipLive, isLecturePost, isLectureReel } from "@/lib/clip-ingest";
+import { tradeRank } from "@/lib/trade-shuffle";
 import { hallEnglish } from "@/lib/hall-lang";
 import { rankLabel } from "@/lib/format";
 import { TRADE_GROUPS } from "@/lib/seed";
-import { youtubeCommand, youtubeEmbed, youtubeListen, youtubeSeek, youtubeThumb, youtubeTimeFromMessage } from "@/lib/youtube";
+import { youtubeCommand, youtubeEmbed, youtubeHideCaptions, youtubeListen, youtubeSeek, youtubeThumb, youtubeTimeFromMessage } from "@/lib/youtube";
 import { armHallSound } from "@/lib/clip-focus";
 import { personById, useForge } from "@/lib/store";
 import { hallVoice, talkScript } from "@/lib/talk-scripts";
 import { pauseAllHallClips } from "@/lib/clip-focus";
 import { HOUSE_NAME, stripHouse, workSerial } from "@/components/work-frame";
 import { YoutubeStage } from "@/components/youtube-stage";
+import { ClipRail } from "@/components/clip-rail";
+import { FilmNotes } from "@/components/film-notes";
 import {
   armHallScroll,
   leavePictureInPicture,
@@ -93,7 +96,6 @@ export function WorkWheel() {
     const synced: WheelItem[] = [];
     const seenYt = new Set<string>();
     const seenTitle = new Set<string>();
-    const seenTrade = new Set<string>();
 
     function titleKey(title: string) {
       return stripHouse(title).toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
@@ -154,15 +156,24 @@ export function WorkWheel() {
       });
     }
 
+    const byTrade = new Map<string, typeof synced>();
+    for (const it of synced) {
+      const list = byTrade.get(it.person.trade) ?? [];
+      list.push(it);
+      byTrade.set(it.person.trade, list);
+    }
     const first: WheelItem[] = [];
     const rest: WheelItem[] = [];
-    for (const it of synced) {
-      if (!seenTrade.has(it.person.trade)) {
-        seenTrade.add(it.person.trade);
-        first.push(it);
-      } else rest.push(it);
+    for (const [trade, list] of byTrade) {
+      list.sort((a, b) => tradeRank(trade, a.youtube || a.id) - tradeRank(trade, b.youtube || b.id));
+      const [lead, ...more] = list;
+      if (lead) first.push(lead);
+      rest.push(...more);
     }
-    const plates = [...first, ...rest].slice(0, Math.max(24, first.length));
+    const ordered = [...first, ...rest];
+    const money = ordered.filter((x) => x.id.startsWith("money-"));
+    const other = ordered.filter((x) => !x.id.startsWith("money-"));
+    const plates = [...money, ...other].slice(0, Math.max(24, first.length + money.length));
     const onPlate = new Set(plates.map((x) => x.person.id));
 
     const faces = roster
@@ -375,6 +386,18 @@ export function WorkWheel() {
     setOpen(null);
   }
 
+  function nextStage() {
+    const list = itemsRef.current;
+    if (!list.length) return;
+    const next = (resumeRef.current + 1) % list.length;
+    resumeRef.current = next;
+    const it = list[next];
+    if (!it) return;
+    setOpenAt(0);
+    setWheelResume({ itemId: it.id, seconds: 0, youtube: it.youtube });
+    setOpen(it);
+  }
+
   function openCard(id: string) {
     halt(false);
     navigate({ to: "/p/$id", params: { id } });
@@ -576,11 +599,20 @@ export function WorkWheel() {
         </div>
       </div>
 
+      {!open ? (
+        <ClipRail
+          person={(speaker ?? items[0])?.person}
+          meaning={(speaker ?? items[0])?.script || (speaker ?? items[0])?.title}
+          clipId={(speaker ?? items[0])?.youtube}
+        />
+      ) : null}
+
       {open ? (
         <WheelStage
           item={open}
           start={openAt}
           onClose={closeStage}
+          onNext={nextStage}
           onOpenCard={() => {
             const id = open.person.id;
             leaveStage();
@@ -767,12 +799,14 @@ function WheelStage({
   item,
   start = 0,
   onClose,
+  onNext,
   onOpenCard,
   onAsk,
 }: {
   item: WheelItem;
   start?: number;
   onClose: (seconds?: number) => void;
+  onNext: () => void;
   onOpenCard: () => void;
   onAsk: () => void;
 }) {
@@ -802,12 +836,14 @@ function WheelStage({
     window.addEventListener("message", onMsg);
     const poll = window.setInterval(() => {
       youtubeListen(frame.current);
+      youtubeHideCaptions(frame.current);
       youtubeCommand(frame.current, "getCurrentTime");
     }, 700);
     const t = window.setTimeout(() => {
       const f = frame.current;
       if (!f) return;
       youtubeListen(f);
+      youtubeHideCaptions(f);
       youtubeCommand(f, "playVideo");
       youtubeCommand(f, "unMute");
       if (start >= 1) youtubeSeek(f, start);
@@ -829,11 +865,9 @@ function WheelStage({
   return (
     <div className="fixed inset-0 z-[60] flex items-end justify-center bg-ink/80 p-3 sm:items-center sm:p-6">
       <button type="button" className="absolute inset-0 cursor-default" aria-label="Back to the wheel" onClick={cancel} />
-      <div className="relative z-[1] flex max-h-[92dvh] w-full max-w-3xl flex-col overflow-hidden rounded-xl bg-ink shadow-[var(--shadow-border)]">
-        <div className="flex items-center justify-between gap-3 px-4 py-3 text-cream">
-          <div className="min-w-0">
-            <p className="truncate font-display text-2xl tracking-wide">{item.title}</p>
-          </div>
+      <div className="relative z-[1] flex max-h-[92dvh] w-full max-w-6xl flex-col overflow-y-auto rounded-xl bg-ink shadow-[var(--shadow-border)]">
+        <div className="flex flex-col gap-3 px-4 py-3 text-cream sm:flex-row sm:items-center sm:justify-between">
+          <p className="min-w-0 truncate font-display text-2xl tracking-wide">{item.title}</p>
           <div className="flex shrink-0 items-center gap-2">
             <button
               type="button"
@@ -844,43 +878,55 @@ function WheelStage({
             </button>
             <button
               type="button"
-              onClick={cancel}
-              className="grid size-11 place-items-center rounded-full bg-cream/10"
-              aria-label="Cancel"
+              onClick={onNext}
+              className="inline-flex h-11 items-center gap-1.5 rounded-full bg-brick px-4 text-sm font-medium text-cream"
             >
-              <X className="size-4" />
+              Next video
+              <ChevronRight className="size-4" />
             </button>
           </div>
         </div>
-        <div className="relative aspect-video w-full overflow-hidden bg-ink">
-          {item.youtube ? (
-            <YoutubeStage
-              id={item.youtube}
-              title={stripHouse(item.title) || "Work"}
-              autoplay
-              mute={false}
-              start={start}
-              still={item.still}
-              frameRef={frame}
-            />
-          ) : item.video ? (
-            <video
-              src={item.video}
-              poster={item.still}
-              className="absolute inset-0 size-full object-cover"
-              controls
-              autoPlay
-              playsInline
-              onTimeUpdate={(e) => {
-                at.current = e.currentTarget.currentTime;
-              }}
-              ref={(el) => {
-                if (el && start >= 1) el.currentTime = start;
-              }}
-            />
-          ) : (
-            <img src={item.still} alt="" className="absolute inset-0 size-full object-cover object-[center_18%]" />
-          )}
+        <div className="grid items-start lg:grid-cols-[minmax(0,1fr)_18.5rem]">
+          <div className="min-w-0">
+            <div className="relative aspect-video w-full bg-ink">
+              {item.youtube ? (
+                <YoutubeStage
+                  id={item.youtube}
+                  title={stripHouse(item.title) || "Work"}
+                  autoplay
+                  mute={false}
+                  start={start}
+                  still={item.still}
+                  frameRef={frame}
+                />
+              ) : item.video ? (
+                <video
+                  src={item.video}
+                  poster={item.still}
+                  className="absolute inset-0 size-full object-contain"
+                  controls
+                  autoPlay
+                  playsInline
+                  onTimeUpdate={(e) => {
+                    at.current = e.currentTarget.currentTime;
+                  }}
+                  ref={(el) => {
+                    if (el && start >= 1) el.currentTime = start;
+                  }}
+                />
+              ) : (
+                <img src={item.still} alt="" className="absolute inset-0 size-full object-cover object-[center_18%]" />
+              )}
+            </div>
+            <ClipRail person={item.person} meaning={item.script || item.title} clipId={item.youtube} />
+          </div>
+          <FilmNotes
+            className="m-3"
+            text={item.script}
+            title={item.title}
+            speaker={item.person.name}
+            trade={item.person.trade}
+          />
         </div>
         <div className="max-h-[40dvh] overflow-y-auto bg-canvas">
           <WheelContact

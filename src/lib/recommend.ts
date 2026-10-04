@@ -1,4 +1,5 @@
 import { careerTrack } from "./tracks";
+import { callingPaths } from "./callings";
 import type { Person } from "./types";
 
 export function nextCredentials(person: Person): string[] {
@@ -32,6 +33,9 @@ export function nextCredentials(person: Person): string[] {
     if (!has("emdr")) out.push("EMDR if you take trauma");
   } else if (person.trade === "Dentist") {
     if (!has("dea")) out.push("DEA");
+  } else if (callingPaths.some((p) => p.trade === person.trade)) {
+    const path = callingPaths.find((p) => p.trade === person.trade);
+    if (path) out.push(path.house);
   } else {
     if (!has("osha 30")) out.push("OSHA 30");
     if (!has("first aid") && !has("cpr")) out.push("First Aid / CPR");
@@ -47,6 +51,17 @@ export function careerLadder(person: Person): { label: string; current: boolean 
     Plumber: ["Apprentice", "Journeyman", "Master", "Foreman", "Shop owner"],
     HVAC: ["Apprentice", "Journeyman", "NATE / Master", "Foreman", "Shop owner"],
     Welder: ["Helper", "Journeyman", "6G / CWI", "Lead", "Foreman"],
+    Lineman: ["Ground hand", "Apprentice", "Journeyman", "Foreman"],
+    Pipefitter: ["Apprentice", "NCCER", "Journeyman", "Foreman"],
+    "Sheet metal": ["Apprentice", "Journeyman", "Foreman", "Shop"],
+    Mason: ["Tender", "Apprentice", "Journeyman", "Foreman"],
+    Roofer: ["Helper", "Journeyman", "Foreman", "Crew"],
+    "Sprinkler fitter": ["Apprentice", "Journeyman", "Foreman", "Shop"],
+    Machinist: ["Shop", "Journeyman", "Lead", "Programmer"],
+    "Diesel technician": ["Helper", "ASE", "Journeyman", "Shop lead"],
+    Chef: ["Line", "Station", "Sous", "Chef"],
+    "Truck driver": ["CDL school", "Solo", "Trainer", "Owner-operator"],
+    Barber: ["School", "License", "Chair", "Shop"],
     Nurse: ["New grad", "Staff RN", "Charge", "Specialty / CCRN", "Faculty"],
     Physician: ["Resident", "Attending", "Lead hospitalist", "Medical director"],
     Teacher: ["Intern", "Teacher of record", "Lead / department", "National Board"],
@@ -56,6 +71,15 @@ export function careerLadder(person: Person): { label: string; current: boolean 
     Agent: ["License", "Buyer-side", "Broker exam"],
     Therapist: ["Associate", "LCSW", "Independent", "Supervisor"],
     Dentist: ["Associate", "DDS", "Owner-operator"],
+    Paramedic: ["EMT", "Paramedic", "Charge", "Service lead"],
+    "Dental hygienist": ["Program", "RDH", "Lead", "Clinic"],
+    Veterinarian: ["School", "Associate", "Owner"],
+    Midwife: ["RN", "CNM", "Staff", "Practice"],
+    "Respiratory therapist": ["Program", "RRT", "ICU", "Lead"],
+    Firefighter: ["Academy", "Firefighter", "Engineer", "Officer"],
+    Inspector: ["Trade years", "ICC", "Combination", "Chief"],
+    Appraiser: ["Trainee", "Licensed", "Certified", "Supervisor"],
+    Bookkeeper: ["Books", "Certificate", "Lead", "A shop of shops"],
     Advisor: ["Series 7", "Series 66", "CFP", "Principal"],
   };
   const steps = ladders[person.trade] ?? ["Apprentice", "Journeyman", "Lead", "Foreman"];

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Pause, Play, SkipBack, SkipForward } from "lucide-react";
 import { Portrait } from "@/components/portrait";
+import { ClipRail } from "@/components/clip-rail";
 import { Button } from "@/components/ui/button";
 import { formatTalkTime, lectureById, seedLectures } from "@/lib/lecture-seed";
 import { personById, useForge } from "@/lib/store";
@@ -92,6 +93,7 @@ function TalkPage() {
             playsInline
           />
         </div>
+        <ClipRail person={who} meaning={chapter.body || talk.title} clipId={talk.id} />
         <div className="p-4">
           <div className="flex items-start gap-3">
             {who ? <Portrait person={who} link={false} /> : null}

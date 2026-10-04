@@ -19,14 +19,14 @@ export const CALL_SYNONYMS: Record<string, string[]> = {
   hvac: ["rtu", "nate"],
   weld: ["6g", "pipe"],
   "6g": ["weld", "pipe"],
-  hospital: ["micu", "wing", "nurse", "electrician"],
+  hospital: ["micu", "wing"],
   va: ["veteran", "contract", "clearance"],
   teacher: ["classroom", "faculty"],
   locums: ["physician", "hospitalist"],
 };
 
 export function tokens(s: string) {
-  return s
+  return String(s ?? "")
     .toLowerCase()
     .split(/[^a-z0-9+]+/g)
     .filter((t) => t.length > 1);
@@ -45,7 +45,8 @@ export type IndexedCall = {
 export function indexCalls(calls: CrewCall[]): IndexedCall[] {
   return calls.map((c) => {
     const weights = new Map<string, number>();
-    const add = (raw: string, w: number) => {
+    const add = (raw: unknown, w: number) => {
+      if (typeof raw !== "string" || !raw.trim()) return;
       for (const t of tokens(raw)) {
         weights.set(t, Math.max(weights.get(t) ?? 0, w));
         for (const syn of CALL_SYNONYMS[t] ?? []) {
@@ -60,7 +61,8 @@ export function indexCalls(calls: CrewCall[]): IndexedCall[] {
     add(c.state, 3);
     add(c.rate, 2);
     add(c.duration, 2);
-    for (const t of c.tickets) add(t, 7);
+    const ticketList = Array.isArray(c.tickets) ? c.tickets : [];
+    for (const t of ticketList) add(String(t), 7);
     add(c.description, 2);
     if (c.urgent) add("urgent sos emergency", 6);
     if (c.shift) add("shift weekend nights", 5);

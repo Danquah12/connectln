@@ -5,17 +5,22 @@ import {
   hallSoundOn,
   playNextHallClip,
   registerHallClip,
+  bringHallClipToTop,
 } from "@/lib/clip-focus";
 import { onHallSilence, stopHallVoice } from "@/lib/voice-bus";
-import { youtubeCommand, youtubeEmbed, youtubeThumb } from "@/lib/youtube";
+import { youtubeCommand, youtubeEmbed, youtubeHideCaptions, youtubeThumb } from "@/lib/youtube";
 import { cn } from "@/lib/utils";
 
-import { YoutubeMasks } from "@/components/youtube-stage";
+import { YoutubeMasks, filmTitle } from "@/components/youtube-stage";
+import { FilmChrome } from "@/components/film-chrome";
+import { ClipRail } from "@/components/clip-rail";
+import type { Person } from "@/lib/types";
 
 function bootPlayer(iframe: HTMLIFrameElement | null, withSound: boolean) {
   if (!iframe?.contentWindow) return;
   iframe.contentWindow.postMessage(JSON.stringify({ event: "listening", id: "1" }), "*");
   youtubeCommand(iframe, "addEventListener", ["onStateChange"]);
+  youtubeHideCaptions(iframe);
   youtubeCommand(iframe, "mute");
   youtubeCommand(iframe, "playVideo");
   if (withSound) youtubeCommand(iframe, "unMute");
@@ -27,7 +32,16 @@ export function YoutubeClip({
   headline,
   portrait = false,
   bare = false,
+  soundOnView = false,
+  caption,
+  spoken,
+  plate,
+  banner,
   className,
+  showRail = true,
+  social = false,
+  large = false,
+  rail,
 }: {
   id: string;
   title?: string;
@@ -35,7 +49,27 @@ export function YoutubeClip({
   portrait?: boolean;
   auto?: boolean;
   bare?: boolean;
+  soundOnView?: boolean;
+  caption?: string;
+  spoken?: string;
+  plate?: string;
+  banner?: { mark: string; title: string; line?: string };
   className?: string;
+  showRail?: boolean;
+  social?: boolean;
+  large?: boolean;
+  rail?: {
+    person?: Person | null;
+    likes?: number;
+    comments?: number;
+    reposts?: number;
+    liked?: boolean;
+    onLike?: () => void;
+    onComment?: () => void;
+    onWrite?: (body: string) => void;
+    onRepost?: () => void;
+    meaning?: string;
+  };
 }) {
   const root = useRef<HTMLDivElement>(null);
   const frame = useRef<HTMLIFrameElement>(null);
@@ -45,6 +79,23 @@ export function YoutubeClip({
   const [playing, setPlaying] = useState(false);
   const [sound, setSound] = useState(false);
   const [thumb, setThumb] = useState(youtubeThumb(id));
+  const [captionOpen, setCaptionOpen] = useState(false);
+  const phrases = (spoken ?? "")
+    .split(/\s+/)
+    .filter(Boolean)
+    .reduce<string[]>((rows, word) => {
+      const last = rows[rows.length - 1];
+      if (!last || last.split(" ").length >= 3) rows.push(word);
+      else rows[rows.length - 1] = `${last} ${word}`;
+      return rows;
+    }, []);
+  const [phrase, setPhrase] = useState(0);
+
+  useEffect(() => {
+    if (!playing || phrases.length < 2) return;
+    const timer = window.setInterval(() => setPhrase((n) => (n + 1) % phrases.length), 1600);
+    return () => window.clearInterval(timer);
+  }, [playing, phrases.length]);
 
   useEffect(() => {
     setThumb(youtubeThumb(id));
@@ -55,7 +106,7 @@ export function YoutubeClip({
 
   function startClip() {
     live.current = true;
-    const hear = hallSoundOn() || wantSound.current;
+    const hear = soundOnView || hallSoundOn() || wantSound.current;
     wantSound.current = hear;
     setSound(hear);
     setMounted(true);
@@ -94,8 +145,8 @@ export function YoutubeClip({
     const iframe = frame.current;
     const t = window.setTimeout(() => {
       bootPlayer(iframe, wantSound.current);
-      if (live.current) setPlaying(true);
     }, 700);
+    let reveal = 0;
     function onMsg(e: MessageEvent) {
       if (iframe && e.source && e.source !== iframe.contentWindow) return;
       let data: { event?: string; info?: number } = {};
@@ -110,7 +161,10 @@ export function YoutubeClip({
       }
       if (data.event !== "onStateChange") return;
       if (data.info === 1) {
-        setPlaying(true);
+        window.clearTimeout(reveal);
+        reveal = window.setTimeout(() => {
+          if (live.current) setPlaying(true);
+        }, 240);
         if (wantSound.current) youtubeCommand(iframe, "unMute");
         else youtubeCommand(iframe, "mute");
       }
@@ -118,23 +172,26 @@ export function YoutubeClip({
       if (data.info === 0) {
         live.current = false;
         setPlaying(false);
+        setMounted(false);
         playNextHallClip(root.current);
       }
     }
     window.addEventListener("message", onMsg);
     return () => {
       window.clearTimeout(t);
+      window.clearTimeout(reveal);
       window.removeEventListener("message", onMsg);
     };
   }, [mounted, id]);
 
   return (
-    <div ref={root} data-hall-clip="1" className={cn("overflow-hidden bg-ink", className)}>
-      <div className={cn("clip-crop bg-ink", portrait ? "aspect-[9/16]" : "aspect-video")}>
+    <div className={cn("flex min-w-0 max-w-full flex-col", className)}>
+    <div ref={root} data-hall-clip="1" className="min-h-0 w-full flex-1 overflow-hidden bg-ink">
+      <div className={cn("clip-crop bg-ink", large ? "aspect-[4/5]" : portrait || social ? "aspect-[9/16]" : "aspect-video")}>
         <img
           src={thumb}
           alt=""
-          className="absolute inset-0 size-full object-cover"
+          className={cn("absolute inset-0 size-full object-center", large ? "object-cover" : "object-contain")}
           onError={() => setThumb(youtubeThumb(id, "hq"))}
         />
         {headline && !playing ? (
@@ -148,20 +205,33 @@ export function YoutubeClip({
           <iframe
             ref={frame}
             src={youtubeEmbed(id, { autoplay: true, mute: true })}
-            title={title || headline || "Work video"}
-            className={cn("clip-crop-frame", playing ? "opacity-100" : "opacity-0")}
+            title={filmTitle(title || headline)}
+            className={cn(large ? "clip-fill-frame" : "clip-crop-frame", portrait && !large && "clip-crop-talk", !playing && "invisible")}
             allow="autoplay; encrypted-media"
             tabIndex={-1}
             onLoad={() => bootPlayer(frame.current, wantSound.current)}
           />
         ) : null}
-        <span className="clip-crop-corner" aria-hidden />
-        <YoutubeMasks />
+        {social ? null : <YoutubeMasks />}
+        {social ? (
+          <FilmChrome
+            person={rail?.person}
+            caption={rail?.meaning || headline || title}
+            likes={rail?.likes}
+            comments={rail?.comments}
+            liked={rail?.liked}
+            onLike={rail?.onLike}
+            onWrite={rail?.onWrite}
+            onRepost={rail?.onRepost}
+            clipId={id}
+          />
+        ) : null}
         <button
           type="button"
           className="absolute inset-0 z-[2]"
           aria-label={playing ? "Pause" : "Play"}
           onClick={() => {
+            bringHallClipToTop(root.current);
             if (!live.current) {
               startClip();
               return;
@@ -176,6 +246,7 @@ export function YoutubeClip({
             }
           }}
         />
+        {social ? null : (
         <button
           type="button"
           className="absolute left-3 top-3 z-[3] grid size-11 place-items-center rounded-sm bg-ink/80 text-cream"
@@ -195,7 +266,67 @@ export function YoutubeClip({
         >
           {sound ? <Volume2 className="size-4" strokeWidth={1.75} /> : <VolumeX className="size-4" strokeWidth={1.75} />}
         </button>
+        )}
+        {spoken && phrases[phrase] ? (
+          <span className="pointer-events-none absolute inset-x-4 bottom-[18%] z-[4] text-center text-lg font-medium text-cream drop-shadow">
+            {phrases[phrase]}
+          </span>
+        ) : null}
+        {plate ? (
+          <span className="pointer-events-none absolute bottom-3 left-3 z-[4] bg-ink px-2 py-1 text-sm font-medium text-cream">
+            {plate}
+          </span>
+        ) : null}
+        {banner ? (
+          <span className="pointer-events-none absolute inset-x-0 bottom-0 z-[4]">
+            <span className="ml-3 inline-block bg-ink px-2 py-0.5 text-[10px] font-medium tracking-wide text-cream uppercase">
+              {banner.mark}
+            </span>
+            <span className="block bg-brick px-3 py-2">
+              <span className="block font-display text-xl leading-tight tracking-wide text-cream">{banner.title}</span>
+              {banner.line ? <span className="mt-0.5 block text-[11px] text-cream/80">{banner.line}</span> : null}
+            </span>
+          </span>
+        ) : null}
+        {caption ? (
+          <div className="absolute inset-x-0 bottom-0 z-[4] bg-gradient-to-t from-ink via-ink/80 to-transparent px-4 pt-14 pb-3">
+            <p
+              className={cn(
+                "font-display text-xl leading-tight tracking-wide text-cream sm:text-2xl",
+                captionOpen ? "" : "line-clamp-3",
+              )}
+            >
+              {caption}
+            </p>
+            <button
+              type="button"
+              className="mt-2 rounded-sm bg-brick px-2.5 py-1 text-xs font-medium text-cream"
+              onClick={(e) => {
+                e.stopPropagation();
+                setCaptionOpen((v) => !v);
+              }}
+            >
+              {captionOpen ? "Hide caption" : "Read caption"}
+            </button>
+          </div>
+        ) : null}
       </div>
+    </div>
+    {showRail ? (
+    <ClipRail
+      person={rail?.person}
+      likes={rail?.likes}
+      comments={rail?.comments}
+      reposts={rail?.reposts}
+      liked={rail?.liked}
+      onLike={rail?.onLike}
+      onComment={rail?.onComment}
+      onWrite={rail?.onWrite}
+      onRepost={rail?.onRepost}
+      meaning={rail?.meaning || title || headline}
+      clipId={id}
+    />
+    ) : null}
     </div>
   );
 }

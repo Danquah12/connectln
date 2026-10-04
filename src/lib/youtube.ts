@@ -25,14 +25,14 @@ export function youtubeEmbed(id: string, opts?: { autoplay?: boolean; mute?: boo
     playsinline: "1",
     iv_load_policy: "3",
     cc_load_policy: "0",
+    controls: "0",
+    fs: "0",
+    disablekb: "1",
+    autohide: "1",
+    showinfo: "0",
   });
   if (opts?.controls) {
-    q.set("controls", "1");
-    q.set("fs", "1");
-  } else {
     q.set("controls", "0");
-    q.set("fs", "0");
-    q.set("disablekb", "1");
   }
   if (origin) q.set("origin", origin);
   if (opts?.autoplay) q.set("autoplay", "1");
@@ -44,6 +44,11 @@ export function youtubeEmbed(id: string, opts?: { autoplay?: boolean; mute?: boo
 
 export function youtubeCommand(iframe: HTMLIFrameElement | null, func: string, args: unknown[] = []) {
   iframe?.contentWindow?.postMessage(JSON.stringify({ event: "command", func, args }), "*");
+}
+
+export function youtubeHideCaptions(iframe: HTMLIFrameElement | null) {
+  youtubeCommand(iframe, "unloadModule", ["captions"]);
+  youtubeCommand(iframe, "setOption", ["captions", "track", {}]);
 }
 
 export function youtubeListen(iframe: HTMLIFrameElement | null) {

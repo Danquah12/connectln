@@ -1,4 +1,5 @@
 import type { Cohort, CrewCall, FieldGroup, Guild, Person, Post, Project, Shop, Thread, Trade } from "./types";
+import { callingCalls, callingPeople, callingPosts, callingThreads } from "./callings";
 import { clipPosters } from "./clip-posters";
 import { youtubePosts } from "./talk-videos";
 
@@ -15,6 +16,17 @@ export const TRADES: Trade[] = [
   "Solar",
   "Equipment",
   "Elevator",
+  "Lineman",
+  "Pipefitter",
+  "Sheet metal",
+  "Mason",
+  "Roofer",
+  "Sprinkler fitter",
+  "Machinist",
+  "Diesel technician",
+  "Chef",
+  "Truck driver",
+  "Barber",
   "Nurse",
   "Physician",
   "Pharmacist",
@@ -25,6 +37,15 @@ export const TRADES: Trade[] = [
   "Agent",
   "Therapist",
   "Dentist",
+  "Paramedic",
+  "Dental hygienist",
+  "Veterinarian",
+  "Midwife",
+  "Respiratory therapist",
+  "Firefighter",
+  "Inspector",
+  "Appraiser",
+  "Bookkeeper",
   "Advisor",
 ];
 
@@ -43,12 +64,39 @@ export const TRADE_GROUPS: { id: FieldGroup; label: string; trades: Trade[] }[] 
       "Solar",
       "Equipment",
       "Elevator",
+      "Lineman",
+      "Pipefitter",
+      "Sheet metal",
+      "Mason",
+      "Roofer",
+      "Sprinkler fitter",
+      "Machinist",
+      "Diesel technician",
+      "Chef",
+      "Truck driver",
+      "Barber",
     ],
   },
-  { id: "care", label: "Care", trades: ["Nurse", "Physician", "Pharmacist", "Therapist", "Dentist"] },
+  {
+    id: "care",
+    label: "Care",
+    trades: [
+      "Nurse",
+      "Physician",
+      "Pharmacist",
+      "Therapist",
+      "Dentist",
+      "Paramedic",
+      "Dental hygienist",
+      "Veterinarian",
+      "Midwife",
+      "Respiratory therapist",
+      "Firefighter",
+    ],
+  },
   { id: "classroom", label: "Classroom", trades: ["Teacher", "Faculty"] },
-  { id: "homes", label: "Homes", trades: ["Realtor", "Agent"] },
-  { id: "money", label: "Money", trades: ["Advisor"] },
+  { id: "homes", label: "Homes", trades: ["Realtor", "Agent", "Inspector", "Appraiser"] },
+  { id: "money", label: "Money", trades: ["Advisor", "Bookkeeper"] },
   { id: "build", label: "Builders", trades: ["Developer"] },
 ];
 
@@ -736,6 +784,7 @@ export const people: Person[] = [
       { id: "h2", name: "Night-shift board for MICU", role: "Builder", when: "2023–2026", city: "Baltimore" },
     ],
   },
+  ...callingPeople,
   ...clipPosters,
 ];
 
@@ -1051,9 +1100,16 @@ export const guilds: Guild[] = [
     blurb: "People who ship tools the hall will actually open. Not a startup club.",
     memberIds: ["lena-cho", "andre-voss"],
   },
+  {
+    id: "the-callings",
+    name: "The callings",
+    blurb: "One card for each calling the hall opened. The ticket is the point.",
+    memberIds: callingPeople.map((p) => p.id),
+  },
 ];
 
 export const posts: Post[] = [
+  ...callingPosts,
   ...youtubePosts,
   {
     id: "p-reel-panel",
@@ -1146,7 +1202,7 @@ export const posts: Post[] = [
     id: "p-ask",
     authorId: "keisha-owens",
     kind: "ask",
-    body: "Ask an electrician: I'm a third-year and three-phase still looks like a rumor. Who will walk a wye-delta like they mean it — not a YouTube?",
+    body: "Ask an electrician: I'm a third-year and three-phase still looks like a rumor. Who will walk a wye-delta like they mean it — not a stranger on a screen?",
     createdAt: "2026-09-14T19:10:00.000Z",
     likes: 41,
     comments: [
@@ -1387,6 +1443,7 @@ export const posts: Post[] = [
 ];
 
 export const calls: CrewCall[] = [
+  ...callingCalls,
   {
     id: "call-icu-denver",
     title: "MICU nights — travel",
@@ -1875,6 +1932,7 @@ export const calls: CrewCall[] = [
 ];
 
 export const threads: Thread[] = [
+  ...callingThreads,
   {
     id: "th-tomasz",
     withId: "tomasz-kowalski",

@@ -11,6 +11,7 @@ import { availabilityLabel, rankLabel, veteranLabel } from "@/lib/format";
 import { presenceLabel, presenceOf } from "@/lib/presence";
 import { hallRoster, isExample } from "@/lib/example";
 import { groupOf, hallLabel } from "@/lib/scope";
+import { TRADE_GROUPS } from "@/lib/seed";
 import { reputation } from "@/lib/reputation";
 import { personById, useForge } from "@/lib/store";
 import type { FieldGroup, Person, Trade } from "@/lib/types";
@@ -29,13 +30,16 @@ function PeoplePage() {
   const vouches = useForge((s) => s.vouches);
   const youId = useForge((s) => s.youId);
   const you = personById(people, youId);
+  const savedPersonIds = useForge((s) => s.savedPersonIds);
+  const toggleSavePerson = useForge((s) => s.toggleSavePerson);
   const { q: qSearch, trade: tradeSearch, group: groupSearch } = Route.useSearch();
   const navigate = useNavigate({ from: "/people" });
   const [q, setQ] = useState(qSearch ?? "");
   const fromUrl = boardState({ trade: tradeSearch, group: groupSearch }, you?.trade);
   const [picked, setPicked] = useState<{ group: "all" | FieldGroup; trade: Trade | "all" } | null>(null);
-  const group = picked?.group ?? (you ? groupOf(you.trade) : fromUrl.group);
-  const trade = picked?.trade ?? (you ? you.trade : fromUrl.trade);
+  const explicit = Boolean(tradeSearch || groupSearch);
+  const group = picked?.group ?? (explicit ? fromUrl.group : you ? groupOf(you.trade) : fromUrl.group);
+  const trade = picked?.trade ?? (explicit ? fromUrl.trade : you ? you.trade : fromUrl.trade);
 
   function setBoard(nextGroup: "all" | FieldGroup, nextTrade: Trade | "all") {
     setPicked({ group: nextGroup, trade: nextTrade });
@@ -129,12 +133,20 @@ function PeoplePage() {
         aria-label="Search the roster"
       />
 
+      <YourHall
+        group={group}
+        people={people}
+        youId={youId}
+        saved={savedPersonIds}
+        onTake={toggleSavePerson}
+      />
+
       <BoardFilters
         quiet
         group={group}
         trade={trade}
         onGroup={(g) => setBoard(g, "all")}
-        onTrade={(t) => setBoard(group, t)}
+        onTrade={(t) => setBoard(t === "all" ? group : groupOf(t), t)}
         flags={[
           { id: "open", label: "Open this week", active: openOnly, onClick: () => setOpenOnly((v) => !v) },
           { id: "vets", label: "Veterans", active: veteransOnly, onClick: () => setVeteransOnly((v) => !v) },
@@ -179,6 +191,69 @@ function PeoplePage() {
         </p>
       ) : null}
     </div>
+  );
+}
+
+function YourHall({
+  group,
+  people,
+  youId,
+  saved,
+  onTake,
+}: {
+  group: "all" | FieldGroup;
+  people: Person[];
+  youId: string;
+  saved: string[];
+  onTake: (id: string) => void;
+}) {
+  const halls = group === "all" ? TRADE_GROUPS : TRADE_GROUPS.filter((g) => g.id === group);
+  const roster = hallRoster(people);
+  return (
+    <section className="flex flex-col gap-3">
+      <div>
+        <p className="text-[11px] font-medium tracking-[0.16em] text-muted-foreground uppercase">Your hall</p>
+        <h2 className="font-display text-2xl tracking-wide">People in this calling</h2>
+      </div>
+      {halls.map((hall) => {
+        const cards = hall.trades
+          .map((trade) => roster.find((p) => p.id !== youId && p.trade === trade))
+          .filter((p): p is Person => Boolean(p));
+        if (!cards.length) return null;
+        return (
+          <div key={hall.id}>
+            <p className="mb-2 text-sm font-medium">{hall.label}</p>
+            <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              {cards.map((person) => {
+                const taken = saved.includes(person.id);
+                return (
+                  <li key={person.id} className="flex items-center gap-3 rounded-xl bg-cream p-3 shadow-[var(--shadow-border)]">
+                    <Portrait person={person} size="lg" />
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate font-medium">{person.name}</p>
+                      <p className="truncate text-xs text-muted-foreground">
+                        {person.trade}
+                        {person.city ? ` · ${person.city}` : ""}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => onTake(person.id)}
+                      className={cn(
+                        "h-9 shrink-0 rounded-full px-3 text-sm font-medium",
+                        taken ? "bg-canvas text-muted-foreground" : "bg-ink text-cream",
+                      )}
+                    >
+                      {taken ? "On your hall" : "Take"}
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        );
+      })}
+    </section>
   );
 }
 

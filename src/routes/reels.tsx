@@ -1,17 +1,15 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ChevronDown, ChevronUp, Heart, Volume2, VolumeX } from "lucide-react";
-import { Portrait } from "@/components/portrait";
+import { ChevronDown, ChevronUp } from "lucide-react";
 import { ReelCompose } from "@/components/reel-compose";
 import { YoutubeClip } from "@/components/youtube-clip";
-import { ReelStage, workSerial } from "@/components/work-frame";
+import { FilmChrome } from "@/components/film-chrome";
 import { Button } from "@/components/ui/button";
 import { seedReels } from "@/lib/reel-seed";
 import { isLectureReel } from "@/lib/clip-ingest";
 import { personById, useForge } from "@/lib/store";
 import { talkAudio, talkScript } from "@/lib/talk-scripts";
 import { playHallVoice, stopHallVoice } from "@/lib/voice-bus";
-import { cn } from "@/lib/utils";
 import type { Reel } from "@/lib/types";
 
 export const Route = createFileRoute("/reels")({
@@ -153,98 +151,74 @@ function ReelPlayer({
 
   return (
     <div className="mx-auto w-full max-w-md">
-      <p className="mb-2 font-mono text-[10px] tracking-[0.22em] text-brick uppercase">
-        Proof plate · not a feed
-      </p>
-      <ReelStage serial={workSerial(reel.id)} stamp={reel.kind === "safety" ? "Safety reel" : "Proof of work"}>
-        <div className="relative size-full bg-ink text-cream">
-          {reel.youtube ? (
-            <YoutubeClip id={reel.youtube} headline={reel.title} title={reel.title} portrait auto bare className="size-full" />
-          ) : reel.video ? (
-            <video
-              ref={videoRef}
-              key={reel.id}
-              src={reel.video}
-              poster={reel.still}
-              className="size-full object-contain bg-ink"
-              autoPlay
-              muted={muted}
-              playsInline
-              onClick={finished && author ? undefined : toggleMute}
-              onEnded={() => setFinished(true)}
-            />
-          ) : split && author ? (
-            <button type="button" className="flex size-full" onClick={toggleMute}>
-              <img
-                src={author.photo || reel.still}
-                alt=""
-                className="h-full w-[52%] object-cover object-top"
-              />
-              <span className="flex h-full w-[48%] flex-col bg-cream p-3 text-left text-ink">
-                <span className="text-xs font-medium">{author.name}</span>
-                <span className="mt-2 text-sm leading-relaxed">{words}</span>
-                <span className="mt-auto text-[11px] text-muted-foreground">
-                  {muted ? "Tap to hear it read." : "Reading the card."}
-                </span>
-              </span>
-            </button>
-          ) : (
-            <img src={reel.still} alt="" className="size-full object-contain bg-ink" />
-          )}
-          {finished && author ? (
-            <Link
-              to="/p/$id"
-              params={{ id: author.id }}
-              className="absolute inset-0 z-[3] grid place-items-center bg-ink/55"
-            >
-              <span className="bg-cream px-4 py-2 text-sm font-medium text-ink">
-                Open {author.name.split(" ")[0]}'s card
-              </span>
-            </Link>
-          ) : null}
-          <div className="absolute inset-x-0 bottom-0 z-[2] bg-gradient-to-t from-ink via-ink/70 to-transparent p-4 pt-20">
-            {author ? (
-              <Link to="/p/$id" params={{ id: author.id }} className="flex items-center gap-2">
-                <Portrait person={author} size="sm" link={false} />
-                <span className="text-sm font-medium">{author.name}</span>
-              </Link>
-            ) : null}
-            <p className="mt-2 font-display text-2xl tracking-wide">{reel.title}</p>
-            <p className="mt-1 text-sm text-cream/80">{reel.caption}</p>
-            {muted && !reel.youtube ? (
-              <p className="mt-2 text-xs text-cream/70">Tap the plate to hear them.</p>
-            ) : null}
-            {author ? (
-              <Button variant="cream" size="sm" className="mt-3" asChild>
-                <Link to="/p/$id" params={{ id: author.id }}>
-                  {finished ? "Talk finished — open card" : "Card · contact for a job"}
-                </Link>
-              </Button>
-            ) : null}
-          </div>
-          <div className="absolute top-3 right-3 z-[4] flex flex-col gap-2">
-            <button
-              type="button"
-              onClick={() => toggleReelLike(reel.id)}
-              className="grid size-11 place-items-center bg-ink/60"
-              aria-label="Like"
-            >
-              <Heart className={cn("size-5", liked && "fill-brick text-brick")} />
-            </button>
-            <span className="text-center text-[11px] tabular-nums">{likesShown}</span>
-            {reel.youtube ? null : (
-              <button
-                type="button"
+      <div className="relative mx-auto w-full max-w-md overflow-hidden bg-black text-white">
+        {reel.youtube ? (
+          <YoutubeClip
+            id={reel.youtube}
+            headline={reel.title}
+            title={reel.title}
+            portrait
+            auto
+            bare
+            social
+            showRail={false}
+            className="w-full"
+            rail={{
+              person: author,
+              likes: likesShown,
+              liked,
+              onLike: () => toggleReelLike(reel.id),
+              meaning: reel.caption || reel.title,
+            }}
+          />
+        ) : (
+          <>
+            {reel.video ? (
+              <video
+                ref={videoRef}
+                key={reel.id}
+                src={reel.video}
+                poster={reel.still}
+                className="size-full object-cover bg-black"
+                autoPlay
+                muted={muted}
+                playsInline
                 onClick={toggleMute}
-                className="grid size-11 place-items-center bg-ink/60"
-                aria-label={muted ? "Unmute" : "Mute"}
-              >
-                {muted ? <VolumeX className="size-4" /> : <Volume2 className="size-4" />}
+                onEnded={() => setFinished(true)}
+              />
+            ) : split && author ? (
+              <button type="button" className="flex size-full" onClick={toggleMute}>
+                <img src={author.photo || reel.still} alt="" className="h-full w-[52%] object-cover object-top" />
+                <span className="flex h-full w-[48%] flex-col bg-cream p-3 text-left text-ink">
+                  <span className="text-xs font-medium">{author.name}</span>
+                  <span className="mt-2 text-sm leading-relaxed">{words}</span>
+                </span>
               </button>
+            ) : (
+              <img src={reel.still} alt="" className="size-full object-cover bg-black" />
             )}
-          </div>
-        </div>
-      </ReelStage>
+            <FilmChrome
+              person={author}
+              caption={reel.caption || reel.title}
+              likes={likesShown}
+              liked={liked}
+              onLike={() => toggleReelLike(reel.id)}
+              clipId={reel.id}
+            />
+          </>
+        )}
+        {finished && author && !reel.youtube ? (
+          <Link
+            to="/p/$id"
+            params={{ id: author.id }}
+            className="absolute inset-0 z-[3] grid place-items-center bg-black/55"
+          >
+            <span className="bg-cream px-4 py-2 text-sm font-medium text-ink">
+              Open {author.name.split(" ")[0]}'s card
+            </span>
+          </Link>
+        ) : null}
+      </div>
       <div className="mt-3 flex items-center justify-between gap-2">
         <button
           type="button"

@@ -12,12 +12,16 @@ export function ClipPump() {
     const s = useForge.getState();
     const clean = scrubHallCopy(s.people, s.posts, s.extraReels);
     const youtube = scrubYoutubeCopy(clean.posts, clean.reels);
+    const people = clean.people.map((p) =>
+      p.id.startsWith("in-") && p.example ? { ...p, example: false } : p,
+    );
     if (
       youtube.posts.length !== s.posts.length ||
-      clean.people.length !== s.people.length ||
+      people.length !== s.people.length ||
+      people.some((p, i) => p.example !== s.people[i]?.example) ||
       youtube.reels.length !== s.extraReels.length
     ) {
-      useForge.setState({ people: clean.people, posts: youtube.posts, extraReels: youtube.reels });
+      useForge.setState({ people, posts: youtube.posts, extraReels: youtube.reels });
     } else {
       useForge.setState({ posts: youtube.posts, extraReels: youtube.reels });
     }

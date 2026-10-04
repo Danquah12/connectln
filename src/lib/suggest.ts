@@ -7,7 +7,9 @@ export type Suggestion = {
   why: string;
 };
 
-/** Autocomplete over trades, tickets, MOS, shops, cities — not a web API. */
+function rows<T>(value: unknown): T[] {
+  return Array.isArray(value) ? (value as T[]) : [];
+}
 export function suggestBoard(
   q: string,
   people: Person[],
@@ -29,21 +31,21 @@ export function suggestBoard(
   for (const t of TRADES) push(t, "trade");
   for (const [k, syns] of Object.entries(CALL_SYNONYMS)) {
     push(k, "search");
-    for (const s of syns) push(s, "search");
+    for (const s of rows<string>(syns)) push(s, "search");
   }
-  for (const p of people) {
+  for (const p of rows<Person>(people)) {
     push(p.name, "person");
     push(p.city, "city");
     if (p.veteran?.mos) push(p.veteran.mos, "MOS");
-    for (const t of p.tickets) push(t.name, "ticket");
+    for (const t of rows<{ name?: string }>(p.tickets)) push(t.name ?? "", "ticket");
   }
-  for (const c of calls) {
+  for (const c of rows<CrewCall>(calls)) {
     push(c.shop, "shop");
     push(c.city, "city");
     push(c.title, "call");
-    for (const t of c.tickets) push(t, "ticket");
+    for (const t of rows<string>(c.tickets)) push(String(t), "ticket");
   }
-  for (const l of listings) push(l.title, "market");
+  for (const l of rows<Listing>(listings)) push(l.title, "market");
 
   return out
     .sort((a, b) => {

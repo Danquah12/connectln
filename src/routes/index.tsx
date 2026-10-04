@@ -13,14 +13,14 @@ import { Portrait } from "@/components/portrait";
 import { PostCard } from "@/components/post-card";
 import { TradeDesk } from "@/components/trade-desk";
 import { WorkWheel } from "@/components/work-wheel";
-import { ReelStrip } from "@/components/reel-strip";
 import { QuietBound } from "@/lib/error-component";
 import { YourMorning } from "@/components/your-morning";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { hallRoster } from "@/lib/example";
 import { dnaAdjacent, talkRank } from "@/lib/intel";
-import { hallClipLive, isLecturePost, isLectureReel, isSyncedTalk, talkShuffle } from "@/lib/clip-ingest";
+import { hallClipLive, isLecturePost, isLectureReel, isSyncedTalk } from "@/lib/clip-ingest";
+import { tradeRank } from "@/lib/trade-shuffle";
 import { hallEnglish } from "@/lib/hall-lang";
 import { boardState, matchesBoard, parseBoardSearch } from "@/lib/board";
 import { groupOf, hallLabel } from "@/lib/scope";
@@ -137,7 +137,7 @@ function ShopTalk() {
       const as = isSyncedTalk(a) ? 1 : 0;
       const bs = isSyncedTalk(b) ? 1 : 0;
       if (as !== bs) return bs - as;
-      return talkShuffle(a.id) - talkShuffle(b.id);
+      return tradeRank(aa?.trade || "hall", a.id) - tradeRank(ba?.trade || "hall", b.id);
     });
   }, [
     posts,
@@ -185,6 +185,33 @@ function ShopTalk() {
       <QuietBound>
         <WorkWheel />
       </QuietBound>
+
+      <div className="chip-row -mx-3 px-3 sm:mx-0 sm:px-0">
+        {FILTERS.map((f) => (
+          <button
+            key={f.id}
+            type="button"
+            onClick={() => setFilter(f.id)}
+            className={cn(
+              "h-9 shrink-0 rounded-full px-3.5 text-sm font-medium transition-colors duration-150",
+              filter === f.id
+                ? "bg-ink text-cream"
+                : "bg-cream text-muted-foreground hover:text-ink",
+            )}
+          >
+            {f.id === "yours" && you ? hallLabel(you.trade) : f.label}
+          </button>
+        ))}
+      </div>
+
+      <div className="flex flex-col gap-4">
+        {visible.map((post) => (
+          <PostCard key={post.id} post={post} />
+        ))}
+        {visible.length === 0 ? (
+          <p className="py-12 text-center text-sm text-muted-foreground">Nothing in this lane yet.</p>
+        ) : null}
+      </div>
 
       {pendingInvites.length ? (
         <section className="rounded-xl bg-cream p-4 shadow-[var(--shadow-border)]">
@@ -247,8 +274,6 @@ function ShopTalk() {
         </Link>
         — not in this feed.
       </p>
-
-      <ReelStrip />
 
       <QualifyStrip />
 
@@ -392,33 +417,6 @@ function ShopTalk() {
           </Button>
         </div>
       </form>
-
-      <div className="chip-row -mx-3 px-3 sm:mx-0 sm:px-0">
-        {FILTERS.map((f) => (
-          <button
-            key={f.id}
-            type="button"
-            onClick={() => setFilter(f.id)}
-            className={cn(
-              "h-9 shrink-0 rounded-full px-3.5 text-sm font-medium transition-colors duration-150",
-              filter === f.id
-                ? "bg-ink text-cream"
-                : "bg-cream text-muted-foreground hover:text-ink",
-            )}
-          >
-            {f.id === "yours" && you ? hallLabel(you.trade) : f.label}
-          </button>
-        ))}
-      </div>
-
-      <div className="flex flex-col gap-4">
-        {visible.map((post) => (
-          <PostCard key={post.id} post={post} />
-        ))}
-        {visible.length === 0 ? (
-          <p className="py-12 text-center text-sm text-muted-foreground">Nothing in this lane yet.</p>
-        ) : null}
-      </div>
     </div>
   );
 }

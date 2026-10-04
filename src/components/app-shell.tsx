@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Bell, Briefcase, ClipboardList, MessageSquare, Newspaper, UserRound, Users } from "lucide-react";
+import { Bell, Briefcase, ClipboardList, GraduationCap, MessageSquare, Newspaper, UserRound, Users } from "lucide-react";
 import { HallBinder } from "@/components/hall-binder";
 import { HallBrief } from "@/components/hall-brief";
 import { IdentityBench } from "@/components/identity-bench";
@@ -11,11 +11,14 @@ import { Mark } from "@/components/mark";
 import { Portrait } from "@/components/portrait";
 import { SessionBinder } from "@/components/session-binder";
 import { ThemeBinder, ThemeMenu } from "@/components/theme-picker";
+import { LangMenu } from "@/components/lang-menu";
 import { AdminShell } from "@/components/admin-shell";
 import { ClipPump } from "@/components/clip-pump";
+import { HallApps } from "@/components/hall-apps";
 import { BoardSearch } from "@/components/board-search";
 import { signOut } from "@/lib/auth/client";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
+import { navLabel } from "@/lib/lang";
 import { ticketStatus, ticketStatusLabel } from "@/lib/format";
 import { buildNotices, decisionCount } from "@/lib/notices";
 import { personById, useForge } from "@/lib/store";
@@ -26,6 +29,7 @@ import { cn } from "@/lib/utils";
 const NAV = [
   { to: "/", label: "Shop talk", short: "Talk", icon: Newspaper },
   { to: "/calls", label: "Calls", short: "Calls", icon: Briefcase },
+  { to: "/learn", label: "Learn", short: "Learn", icon: GraduationCap },
   { to: "/people", label: "People", short: "People", icon: Users },
   { to: "/messages", label: "Inbox", short: "Inbox", icon: MessageSquare },
 ] as const;
@@ -39,6 +43,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const youId = useForge((s) => s.youId);
   const threads = useForge((s) => s.threads);
   const sessionRole = useForge((s) => s.sessionRole);
+  const lang = useForge((s) => s.hallLang);
   const you = personById(people, youId);
 
   useEffect(() => {
@@ -92,17 +97,19 @@ export function AppShell({ children }: { children: ReactNode }) {
             </span>
           </Link>
           <BoardSearch />
-          <div className="ml-auto flex shrink-0 items-center gap-1 sm:gap-3">
+          <div className="ml-auto flex shrink-0 items-center gap-0.5 sm:gap-3 [&_button]:max-[420px]:size-9">
             {sessionRole === "desk" ? (
               <Link
                 to="/admin"
                 search={{ bay: "morning" }}
-                className="rounded-full border border-cream/25 px-3 py-1.5 text-xs font-medium text-cream hover:bg-cream/10"
+                className="hidden rounded-full border border-cream/25 px-3 py-1.5 text-xs font-medium text-cream hover:bg-cream/10 sm:inline"
               >
                 Command
               </Link>
             ) : null}
             <ThemeMenu />
+            <LangMenu />
+            <HallApps desk={sessionRole === "desk"} />
             <BoardBell />
             <AuthSlot you={you} />
           </div>
@@ -126,7 +133,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                     )}
                   >
                     <Icon className="size-4" strokeWidth={1.75} />
-                    {item.label}
+                    {navLabel(lang, item.to, item.label)}
                     {item.to === "/messages" && unreadHint ? (
                       <span className="ml-auto size-1.5 rounded-full bg-brick" />
                     ) : null}
@@ -179,7 +186,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <LineDock />
 
       <nav className="hall-tabbar fixed inset-x-0 bottom-0 z-40 border-t border-border bg-cream/95 backdrop-blur-sm lg:hidden">
-        <ul className="mx-auto grid max-w-lg grid-cols-5 px-1">
+        <ul className="mx-auto grid max-w-lg grid-cols-6 px-1">
           {NAV.map((item) => {
             const active = item.to === "/" ? pathname === "/" : pathname.startsWith(item.to);
             const Icon = item.icon;
@@ -189,7 +196,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                   to={item.to}
                   search={boardSearch}
                   className={cn(
-                    "flex min-h-14 flex-col items-center justify-center gap-0.5 text-[11px] font-medium",
+                    "flex min-h-14 min-w-0 flex-col items-center justify-center gap-0.5 px-0.5 text-[10px] leading-tight font-medium sm:text-[11px]",
                     active ? "text-brick" : "text-muted-foreground",
                   )}
                 >
@@ -199,7 +206,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                       <span className="absolute -top-0.5 -right-0.5 size-1.5 rounded-full bg-brick" />
                     ) : null}
                   </span>
-                  {item.short}
+                  <span className="max-w-full truncate">{navLabel(lang, item.to, item.short)}</span>
                 </Link>
               </li>
             );

@@ -1,9 +1,24 @@
 import type { Post } from "./types";
 import { posterForClip } from "./clip-posters";
+import { moneyClips } from "./money-hall";
 import { youtubeThumb } from "./youtube";
 
 /** Starter shop-talk clips from Expedite Consults until the hall posts its own. */
 export const youtubePosts: Post[] = [
+  ...moneyClips.map(
+    (clip, i): Post => ({
+      id: clip.id,
+      authorId: "grace-okonkwo",
+      kind: "talk",
+      headline: clip.title,
+      body: `${clip.blurb} ${clip.source}.`,
+      youtube: clip.youtube,
+      photo: youtubeThumb(clip.youtube),
+      createdAt: new Date(Date.UTC(2026, 8, 20, 12, i)).toISOString(),
+      likes: 12,
+      comments: [],
+    }),
+  ),
   {
     id: "yt-loto",
     authorId: posterForClip("5D4L9eWvg6c"),

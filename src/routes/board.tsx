@@ -77,7 +77,7 @@ function BoardPage() {
             type="button"
             onClick={() => setFilter(f.id)}
             className={cn(
-              "h-10 shrink-0 rounded-lg px-3.5 text-sm font-medium",
+              "h-9 shrink-0 rounded-full px-3.5 text-sm font-medium",
               filter === f.id ? "bg-ink text-cream" : "bg-cream text-muted-foreground",
             )}
           >
@@ -88,7 +88,13 @@ function BoardPage() {
 
       <ul className="flex flex-col gap-2">
         {visible.map((n) => (
-          <li key={n.id} className="rounded-xl bg-cream p-4 shadow-[var(--shadow-border)]">
+          <li
+            key={n.id}
+            className={cn(
+              "rounded-xl p-4 shadow-[var(--shadow-border)]",
+              n.decision ? "border-l-4 border-brick bg-[#e8f1fb]" : "bg-cream",
+            )}
+          >
             <p className="text-[11px] font-medium tracking-[0.16em] text-muted-foreground uppercase">
               {n.kind}
             </p>
@@ -120,7 +126,7 @@ function BoardPage() {
                 </>
               ) : (
                 <Button size="sm" variant="ink" asChild>
-                  <a href={n.href}>{n.kind === "ticket" ? "License desk" : "Open"}</a>
+                  <a href={n.href}>{n.kind === "call" ? "View seats" : n.kind === "ticket" ? "License desk" : "Open"}</a>
                 </Button>
               )}
               <Button size="sm" variant="ghost" onClick={() => dismissNotice(n.id)}>

@@ -3,6 +3,8 @@ import { createFileRoute, Link, Navigate, useSearch } from "@tanstack/react-rout
 import { toast } from "sonner";
 import { Portrait } from "@/components/portrait";
 import { YoutubeStage } from "@/components/youtube-stage";
+import { ClipRail } from "@/components/clip-rail";
+import { FilmNotes } from "@/components/film-notes";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -30,8 +32,12 @@ import { boardResultLabel } from "@/lib/boards";
 import { deskForTicket } from "@/lib/verify-protocol";
 import { clearanceLabel, rankLabel, relTime, ticketStatus, ticketStatusLabel } from "@/lib/format";
 import { personById, useForge } from "@/lib/store";
+import { loadWatchNotes, type WatchRow } from "@/lib/watch-notes";
 import { CLIP_PULL_MS, clipDayLabel, clipDayLedger, clipState, talkBelt } from "@/lib/clip-ingest";
 import { TRADES } from "@/lib/seed";
+import { LEARN_PATHS } from "@/lib/learn-paths";
+import { LIBRARIES } from "@/lib/libraries";
+import { callingPeople } from "@/lib/callings";
 import { youtubeThumb } from "@/lib/youtube";
 import type { Trade } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -50,6 +56,7 @@ const BAYS = [
   { id: "clips", label: "Synced" },
   { id: "seats", label: "Seats" },
   { id: "queue", label: "Queue" },
+  { id: "notes", label: "Notes" },
   { id: "tickets", label: "Tickets" },
   { id: "market", label: "Market" },
   { id: "calls", label: "Calls" },
@@ -82,6 +89,7 @@ export function DeskPage() {
       {bay === "morning" ? <Morning /> : null}
       {bay === "seats" ? <Seats /> : null}
       {bay === "queue" ? <Queue /> : null}
+      {bay === "notes" ? <NotesBay /> : null}
       {bay === "tickets" ? <TicketsBay /> : null}
       {bay === "market" ? <MarketBay /> : null}
       {bay === "calls" ? <CallsBay /> : null}
@@ -98,6 +106,69 @@ export function DeskPage() {
       {bay === "health" ? <HealthBay /> : null}
       {bay === "mhcc" ? <MhccBay /> : null}
     </div>
+  );
+}
+
+function NotesBay() {
+  const notes = useForge((s) => s.watchNotes);
+  const posts = useForge((s) => s.posts);
+  const [remote, setRemote] = useState<WatchRow[]>([]);
+  useEffect(() => {
+    void loadWatchNotes()
+      .then(setRemote)
+      .catch(() => undefined);
+  }, [notes.length]);
+  const WORD: Record<string, string> = {
+    like: "Liked",
+    unlike: "Removed a like",
+    comment: "Commented",
+    repost: "Reposted",
+    unrepost: "Removed a repost",
+    study: "Opened Study",
+    meaning: "Opened Meaning",
+    send: "Sent",
+    meet: "Met",
+  };
+  const rows = [...remote, ...notes]
+    .filter((row) => row.whoName || row.email)
+    .filter((row, i, all) => all.findIndex((x) => x.id === row.id) === i)
+    .sort((a, b) => Date.parse(b.at) - Date.parse(a.at))
+    .slice(0, 200);
+  return (
+    <section className="rounded-xl bg-cream p-4 shadow-[var(--shadow-border)]">
+      <h2 className="font-display text-2xl tracking-wide">Notes</h2>
+      <p className="mt-1 text-sm text-muted-foreground">
+        Kept on the account. The name and email are the ones the person signed in with, not this browser.
+      </p>
+      <ul className="mt-4 flex flex-col gap-2">
+        {rows.map((n) => {
+          const post = posts.find((p) => p.id === n.target);
+          const about = post?.headline || post?.body || n.target;
+          return (
+            <li key={n.id} className="rounded-lg bg-canvas px-3 py-2">
+              <div className="flex flex-wrap items-baseline justify-between gap-2">
+                <p className="text-sm font-medium">{n.whoName || n.email}</p>
+                <p className="text-[11px] text-muted-foreground">{relTime(n.at)}</p>
+              </div>
+              {n.email ? <p className="text-xs text-muted-foreground">{n.email}</p> : null}
+              <p className="mt-1 text-sm">
+                {WORD[n.action] || n.action}
+                {" · "}
+                <span className="text-muted-foreground">{about.slice(0, 120)}</span>
+              </p>
+              {n.detail && (n.action === "comment" || n.action === "meet") ? (
+                <p className="mt-1 text-sm leading-snug">“{n.detail}”</p>
+              ) : null}
+            </li>
+          );
+        })}
+      </ul>
+      {rows.length === 0 ? (
+        <p className="mt-3 text-sm text-muted-foreground">
+          No watch notes yet. Open the hall, use Like, Comment, or Repost under a film, then come back here.
+        </p>
+      ) : null}
+    </section>
   );
 }
 
@@ -748,8 +819,62 @@ function LearnBay() {
   return (
     <section className="rounded-xl bg-cream p-4 shadow-[var(--shadow-border)]">
       <h2 className="font-display text-2xl tracking-wide">Learn / talks</h2>
-      <p className="text-xs text-muted-foreground">Five-minute units and shop lessons. Quality is the point.</p>
-      <ul className="mt-3 space-y-2">
+      <p className="text-xs text-muted-foreground">
+        Every calling. Film, the house that issues the card, the paid library, the person, and the card.
+      </p>
+      <ul className="mt-3 flex flex-col gap-2">
+        {LEARN_PATHS.map((p) => {
+          const who = callingPeople.find((x) => x.trade === p.trade);
+          const lib = LIBRARIES[p.trade];
+          return (
+            <li key={p.trade} className="rounded-lg bg-canvas px-3 py-3">
+              <div className="flex gap-3">
+                {p.youtube ? (
+                  <img src={youtubeThumb(p.youtube)} alt="" className="size-16 shrink-0 rounded object-cover" />
+                ) : null}
+                <div className="min-w-0">
+                  <p className="text-sm font-medium">{p.trade}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">{p.steps}</p>
+                  <p className="mt-1 text-xs">
+                    <a href={p.href} className="underline" target="_blank" rel="noreferrer">
+                      {p.house}
+                    </a>
+                    {lib ? (
+                      <>
+                        {" · "}
+                        <a href={lib.href} className="underline" target="_blank" rel="noreferrer">
+                          Paid · {lib.house}
+                        </a>
+                      </>
+                    ) : null}
+                  </p>
+                  <div className="mt-2 flex flex-wrap gap-2 text-xs">
+                    {p.youtube ? (
+                      <Link to="/watch/$id" params={{ id: p.youtube }} className="font-medium text-brick">
+                        Film
+                      </Link>
+                    ) : null}
+                    {who ? (
+                      <>
+                        <Link to="/p/$id" params={{ id: who.id }} className="font-medium">
+                          {who.name}
+                        </Link>
+                        <Link to="/card/$id" params={{ id: who.id }} className="font-medium">
+                          Card
+                        </Link>
+                        <Link to="/messages" className="font-medium">
+                          Inbox
+                        </Link>
+                      </>
+                    ) : null}
+                  </div>
+                </div>
+              </div>
+            </li>
+          );
+        })}
+      </ul>
+      <ul className="mt-4 space-y-2">
         {seedLectures.map((t) => (
           <li key={t.id}>
             <Link to="/talk/$id" params={{ id: t.id }} className="block rounded-lg bg-canvas px-3 py-2 text-sm hover:bg-accent">
@@ -1460,7 +1585,7 @@ function ClipsBay() {
         <div>
           <h2 className="font-display text-2xl tracking-wide">Synced Videos</h2>
           <p className="text-xs text-muted-foreground">
-            Pull every 5 minutes into this bay. Vet here. Keep sends it to Shop talk and the wheel for the current{" "}
+            Pull every 5 minutes. A clip is vetted on the way in, written to this synced list, then it goes on Shop talk, People, and Learn for the current{" "}
             {talkBelt() === "apac" ? "Asia / Pacific" : talkBelt() === "emea" ? "Europe / Africa" : "Americas"} 8-hour belt.
             Hold keeps it off the hall. Remove and it never syncs again. Expedite Consults LLC on the plate.
             {at ? ` Last pull ${relTime(at)}.` : " No pull yet."}
@@ -1477,7 +1602,7 @@ function ClipsBay() {
               .then((r) => (r.ok ? r.json() : null))
               .then((batch) => {
                 useForge.getState().ingestClips(batch ?? { failed: [{ handle: "desk", reason: "No batch" }] });
-                toast("In the vet bay. Keep a clip to put it on Shop talk.");
+                toast("Vetted and on the hall. Hold or remove from this list.");
               })
               .catch(() => toast("Pull did not finish."))
               .finally(() => setBusy(false));
@@ -1555,7 +1680,13 @@ function ClipsBay() {
           return (
             <li key={row.youtube} className="overflow-hidden rounded-lg bg-canvas">
               {watch === row.youtube ? (
-                <YoutubeStage id={row.youtube} title={row.title} still={row.still} autoplay mute={false} />
+                <>
+                  <div className="hall-fit-tall max-w-full">
+                    <YoutubeStage id={row.youtube} title={row.title} still={row.still} autoplay mute={false} chrome />
+                  </div>
+                  <ClipRail meaning={row.title} clipId={row.youtube} />
+                  <FilmNotes className="m-3" text={row.title} title={row.title} trade={row.trade} />
+                </>
               ) : (
                 <button
                   type="button"

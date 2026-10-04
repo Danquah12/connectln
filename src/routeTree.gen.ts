@@ -52,6 +52,7 @@ import { Route as RecordRouteImport } from './routes/record'
 import { Route as ReelsRouteImport } from './routes/reels'
 import { Route as ResumeRouteImport } from './routes/resume'
 import { Route as SavedRouteImport } from './routes/saved'
+import { Route as ScopeRouteImport } from './routes/scope'
 import { Route as SearchRouteImport } from './routes/search'
 import { Route as ShopsRouteImport } from './routes/shops'
 import { Route as ShowcaseRouteImport } from './routes/showcase'
@@ -293,6 +294,11 @@ const SavedRoute = SavedRouteImport.update({
   path: '/saved',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ScopeRoute = ScopeRouteImport.update({
+  id: '/scope',
+  path: '/scope',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SearchRoute = SearchRouteImport.update({
   id: '/search',
   path: '/search',
@@ -463,6 +469,7 @@ export interface FileRoutesByFullPath {
   '/reels': typeof ReelsRoute
   '/resume': typeof ResumeRoute
   '/saved': typeof SavedRoute
+  '/scope': typeof ScopeRoute
   '/search': typeof SearchRoute
   '/shops': typeof ShopsRoute
   '/showcase': typeof ShowcaseRoute
@@ -533,6 +540,7 @@ export interface FileRoutesByTo {
   '/reels': typeof ReelsRoute
   '/resume': typeof ResumeRoute
   '/saved': typeof SavedRoute
+  '/scope': typeof ScopeRoute
   '/search': typeof SearchRoute
   '/shops': typeof ShopsRoute
   '/showcase': typeof ShowcaseRoute
@@ -604,6 +612,7 @@ export interface FileRoutesById {
   '/reels': typeof ReelsRoute
   '/resume': typeof ResumeRoute
   '/saved': typeof SavedRoute
+  '/scope': typeof ScopeRoute
   '/search': typeof SearchRoute
   '/shops': typeof ShopsRoute
   '/showcase': typeof ShowcaseRoute
@@ -676,6 +685,7 @@ export interface FileRouteTypes {
     | '/reels'
     | '/resume'
     | '/saved'
+    | '/scope'
     | '/search'
     | '/shops'
     | '/showcase'
@@ -746,6 +756,7 @@ export interface FileRouteTypes {
     | '/reels'
     | '/resume'
     | '/saved'
+    | '/scope'
     | '/search'
     | '/shops'
     | '/showcase'
@@ -816,6 +827,7 @@ export interface FileRouteTypes {
     | '/reels'
     | '/resume'
     | '/saved'
+    | '/scope'
     | '/search'
     | '/shops'
     | '/showcase'
@@ -887,6 +899,7 @@ export interface RootRouteChildren {
   ReelsRoute: typeof ReelsRoute
   ResumeRoute: typeof ResumeRoute
   SavedRoute: typeof SavedRoute
+  ScopeRoute: typeof ScopeRoute
   SearchRoute: typeof SearchRoute
   ShopsRoute: typeof ShopsRoute
   ShowcaseRoute: typeof ShowcaseRoute
@@ -1216,6 +1229,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SavedRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/scope': {
+      id: '/scope'
+      path: '/scope'
+      fullPath: '/scope'
+      preLoaderRoute: typeof ScopeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/search': {
       id: '/search'
       path: '/search'
@@ -1448,6 +1468,7 @@ const rootRouteChildren: RootRouteChildren = {
   ReelsRoute: ReelsRoute,
   ResumeRoute: ResumeRoute,
   SavedRoute: SavedRoute,
+  ScopeRoute: ScopeRoute,
   SearchRoute: SearchRoute,
   ShopsRoute: ShopsRoute,
   ShowcaseRoute: ShowcaseRoute,

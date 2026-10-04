@@ -1,4 +1,5 @@
 import type { Person } from "./types";
+import { callingPaths } from "./callings";
 
 export type TrackStep = { id: string; label: string; done: boolean };
 
@@ -170,6 +171,28 @@ export function careerTrack(person: Person): {
     return {
       title: "Developer · ship → a shop pays",
       next: steps.find((s) => !s.done)?.label ?? "Keep shipping",
+      percent: Math.round((done / steps.length) * 100),
+      steps,
+    };
+  }
+
+  const path = callingPaths.find((p) => p.trade === person.trade);
+  if (path) {
+    const ticket = person.tickets[0]?.name ?? "The card";
+    const steps: TrackStep[] = [
+      { id: "ticket", label: ticket, done: person.tickets.length > 0 },
+      { id: "house", label: path.house, done: person.years >= 1 },
+      { id: "years", label: `${person.years} years in the work`, done: person.years >= 4 },
+      {
+        id: "lead",
+        label: "Lead seat",
+        done: ["Foreman", "Master", "Owner", "Charge", "Attending"].includes(person.level),
+      },
+    ];
+    const done = steps.filter((s) => s.done).length;
+    return {
+      title: `${person.trade} · the card, then the hours`,
+      next: steps.find((s) => !s.done)?.label ?? "Lead",
       percent: Math.round((done / steps.length) * 100),
       steps,
     };

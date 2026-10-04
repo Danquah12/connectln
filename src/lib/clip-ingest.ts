@@ -46,7 +46,8 @@ export function clipState(
 }
 
 export function hallClipLive(youtube: string | undefined, status?: Record<string, ClipStatus>, id?: string) {
-  return clipState(youtube, status, id) === "live";
+  const st = clipState(youtube, status, id);
+  return st === "live" || st === "pending";
 }
 
 export function isLecturePost(post: { sitTo?: string; kind?: string }) {
@@ -93,7 +94,7 @@ export function talkShuffle(id: string, at = Date.now()) {
 }
 
 export const CLIP_PULL_MS = 5 * 60 * 1000;
-export const CLIP_PULL_REV = 19;
+export const CLIP_PULL_REV = 20;
 
 export type ClipDayRow = {
   day: string;
@@ -223,7 +224,7 @@ function posterOf(author: string, src: ClipSource, youtube: string, title: strin
     specialties: research ? ["Research findings"] : [title.slice(0, 32)],
     tickets: [{ id: "t1", name: "Posted this work", issuer: HOUSE }],
     history: [{ id: "h1", name: "Posted this work", role: "On camera", when: "2026", city: "Open" }],
-    example: true,
+    example: false,
   };
 }
 

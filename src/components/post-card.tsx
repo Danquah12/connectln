@@ -1,11 +1,14 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { Heart, MessageCircle, Quote, Repeat2, Bookmark, Volume2, VolumeX } from "lucide-react";
+import { Heart, MessageCircle, Quote, Repeat2, Bookmark } from "lucide-react";
 import { LineCompose } from "@/components/line-compose";
 import { ExampleMark } from "@/components/example-mark";
 import { ReportControl } from "@/components/report-control";
 import { Portrait } from "@/components/portrait";
 import { YoutubeClip } from "@/components/youtube-clip";
+import { ClipRail } from "@/components/clip-rail";
+import { FilmNotes } from "@/components/film-notes";
+import { YoutubeMasks } from "@/components/youtube-stage";
 import { WorkFrame, workSerial } from "@/components/work-frame";
 import { QuietBound } from "@/lib/error-component";
 import { Badge } from "@/components/ui/badge";
@@ -15,7 +18,7 @@ import { personById, useForge } from "@/lib/store";
 import { relTime, rolePlate } from "@/lib/format";
 import { isExample } from "@/lib/example";
 import { onHallSilence } from "@/lib/voice-bus";
-import { playNextHallClip, registerHallClip } from "@/lib/clip-focus";
+import { playNextHallClip, registerHallClip, bringHallClipToTop } from "@/lib/clip-focus";
 import { cn } from "@/lib/utils";
 import type { Post } from "@/lib/types";
 
@@ -86,13 +89,55 @@ export function PostCard({ post }: { post: Post }) {
           </time>
         </div>
       </header>
-      {post.youtube ? (
-        <div className="mt-3 px-3">
-          <QuietBound>
-            <WorkFrame serial={workSerial(post.id)} stamp="Expedite Consults LLC">
-              <YoutubeClip id={post.youtube} title={post.headline || post.body} bare />
-            </WorkFrame>
-          </QuietBound>
+      {(post.youtube || post.video) ? (
+        <div className="mt-3 grid items-start gap-3 px-2 sm:px-3 lg:grid-cols-[minmax(0,1.35fr)_minmax(16rem,20rem)]">
+          <div className="min-w-0">
+            {post.youtube ? (
+              <QuietBound>
+                <WorkFrame serial={workSerial(post.id)} stamp="Expedite Consults LLC" wellClassName="aspect-[4/5]">
+                  <YoutubeClip
+                    id={post.youtube}
+                    title={post.headline || post.body}
+                    bare
+                    rail={{
+                      person: author,
+                      likes: post.likes,
+                      comments: post.comments.length,
+                      reposts: post.boosts ?? 0,
+                      liked,
+                      onLike: () => toggleLike(post.id),
+                      onComment: () => setOpen(true),
+                      onWrite: (body) => addComment(post.id, body),
+                      onRepost: () => boostPost(post.id),
+                      meaning: post.body || post.headline,
+                    }}
+                  />
+                </WorkFrame>
+              </QuietBound>
+            ) : (
+              <FeedVideo
+                src={post.video!}
+                poster={post.photo}
+                personId={author.id}
+                person={author}
+                likes={post.likes}
+                comments={post.comments.length}
+                reposts={post.boosts ?? 0}
+                liked={liked}
+                onLike={() => toggleLike(post.id)}
+                onComment={() => setOpen(true)}
+                onWrite={(body) => addComment(post.id, body)}
+                onRepost={() => boostPost(post.id)}
+                meaning={post.body || post.headline}
+              />
+            )}
+          </div>
+          <FilmNotes
+            text={post.body || post.headline}
+            title={post.headline}
+            speaker={author.name}
+            trade={author.trade}
+          />
         </div>
       ) : null}
       {copy.kicker ? (
@@ -101,9 +146,7 @@ export function PostCard({ post }: { post: Post }) {
       {copy.line ? (
         <p className={cn("px-4 pb-3 text-[15px] leading-relaxed", copy.kicker ? "pt-1" : "pt-3")}>{copy.line}</p>
       ) : null}
-      {!post.youtube && post.video ? (
-        <FeedVideo src={post.video} poster={post.photo} personId={author.id} />
-      ) : !post.youtube && post.photo ? (
+      {!post.youtube && post.video ? null : !post.youtube && post.photo ? (
         <div className="px-3 pb-3">
           <WorkFrame serial={workSerial(post.id)} stamp="Still" wellClassName="aspect-auto">
             <img
@@ -125,6 +168,7 @@ export function PostCard({ post }: { post: Post }) {
           </Link>
         </div>
       ) : null}
+      {post.youtube || post.video ? null : (
       <div className="flex items-center gap-1 px-2 py-1.5">
         <button
           type="button"
@@ -176,6 +220,7 @@ export function PostCard({ post }: { post: Post }) {
         </button>
         <ReportControl kind="line" targetId={post.id} target={post.body.slice(0, 80)} />
       </div>
+      )}
       <LineCompose open={quote} onOpenChange={setQuote} quote={post} />
       {(open || post.comments.length > 0) && (
         <div className="border-t border-border px-4 py-3">
@@ -229,10 +274,30 @@ function FeedVideo({
   src,
   poster,
   personId,
+  person,
+  likes,
+  comments,
+  reposts,
+  liked,
+  onLike,
+  onComment,
+  onWrite,
+  onRepost,
+  meaning,
 }: {
   src: string;
   poster?: string;
   personId: string;
+  person?: import("@/lib/types").Person;
+  likes?: number;
+  comments?: number;
+  reposts?: number;
+  liked?: boolean;
+  onLike?: () => void;
+  onComment?: () => void;
+  onWrite?: (body: string) => void;
+  onRepost?: () => void;
+  meaning?: string;
 }) {
   const box = useRef<HTMLDivElement>(null);
   const ref = useRef<HTMLVideoElement>(null);
@@ -286,29 +351,39 @@ function FeedVideo({
 
   return (
     <div ref={box} data-hall-clip="1" className="px-3 pb-3">
-      <WorkFrame serial={workSerial(personId)} stamp="Expedite Consults LLC" wellClassName="aspect-auto">
-        <div className="relative bg-ink">
+      <WorkFrame serial={workSerial(personId)} stamp="Expedite Consults LLC" wellClassName="aspect-[4/5]">
+        <div className="relative size-full bg-ink">
           <video
             ref={ref}
             src={src}
             poster={poster}
-            className="max-h-[min(70vh,36rem)] w-full bg-ink object-contain"
+            className="size-full bg-ink object-cover object-[center_18%]"
             muted
             playsInline
             preload="metadata"
+            onClick={() => {
+              bringHallClipToTop(box.current);
+              if (muted) hear();
+              else hush();
+            }}
             onEnded={() => playNextHallClip(box.current)}
-            onClick={() => (muted ? hear() : hush())}
           />
-          <button
-            type="button"
-            onClick={() => (muted ? hear() : hush())}
-            className="absolute right-3 bottom-3 grid size-11 place-items-center rounded-sm bg-ink/75 text-cream"
-            aria-label={muted ? "Hear this" : "Quiet"}
-          >
-            {muted ? <VolumeX className="size-4" /> : <Volume2 className="size-4" />}
-          </button>
+          <YoutubeMasks />
         </div>
       </WorkFrame>
+      <ClipRail
+        person={person}
+        likes={likes}
+        comments={comments}
+        reposts={reposts}
+        liked={liked}
+        onLike={onLike}
+        onComment={onComment}
+        onWrite={onWrite}
+        onRepost={onRepost}
+        meaning={meaning}
+        clipId={personId}
+      />
     </div>
   );
 }

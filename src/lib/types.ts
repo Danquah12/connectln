@@ -9,6 +9,17 @@ export type Trade =
   | "Solar"
   | "Equipment"
   | "Elevator"
+  | "Lineman"
+  | "Pipefitter"
+  | "Sheet metal"
+  | "Mason"
+  | "Roofer"
+  | "Sprinkler fitter"
+  | "Machinist"
+  | "Diesel technician"
+  | "Chef"
+  | "Truck driver"
+  | "Barber"
   | "Nurse"
   | "Physician"
   | "Pharmacist"
@@ -19,6 +30,15 @@ export type Trade =
   | "Agent"
   | "Therapist"
   | "Dentist"
+  | "Paramedic"
+  | "Dental hygienist"
+  | "Veterinarian"
+  | "Midwife"
+  | "Respiratory therapist"
+  | "Firefighter"
+  | "Inspector"
+  | "Appraiser"
+  | "Bookkeeper"
   | "Advisor";
 
 export type FieldGroup = "trades" | "care" | "classroom" | "build" | "homes" | "money";
@@ -230,6 +250,9 @@ export type CrewCall = {
   urgent?: boolean;
   apprentice?: boolean;
   postedBy?: string;
+  wire?: boolean;
+  listingUrl?: string;
+  source?: string;
 };
 
 export type VouchKind =

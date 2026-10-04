@@ -45,6 +45,20 @@ function hitTo(hit: Hit) {
   }
 }
 
+function readSearch(loc: { search?: unknown; searchStr?: unknown }) {
+  const search = loc.search;
+  if (search && typeof search === "object") {
+    const row = search as { q?: unknown; kind?: unknown };
+    return {
+      q: typeof row.q === "string" ? row.q : "",
+      kind: typeof row.kind === "string" ? row.kind : "",
+    };
+  }
+  const raw = typeof loc.searchStr === "string" ? loc.searchStr : "";
+  const params = new URLSearchParams(raw);
+  return { q: params.get("q") ?? "", kind: params.get("kind") ?? "" };
+}
+
 export function BoardSearch({
   variant = "header",
 }: {
@@ -52,14 +66,9 @@ export function BoardSearch({
 }) {
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const qParam =
-    useRouterState({
-      select: (s) => new URLSearchParams(s.location.searchStr).get("q") ?? "",
-    }) ?? "";
-  const kindParam =
-    useRouterState({
-      select: (s) => new URLSearchParams(s.location.searchStr).get("kind") ?? "",
-    }) ?? "";
+  const found = useRouterState({ select: (s) => readSearch(s.location) });
+  const qParam = found.q;
+  const kindParam = found.kind;
   const [q, setQ] = useState(variant === "page" ? qParam : "");
   const [open, setOpen] = useState(false);
   const box = useRef<HTMLDivElement>(null);
@@ -79,13 +88,21 @@ export function BoardSearch({
   const hits = useMemo(() => {
     const query = debouncedQ.trim();
     if (query.length < 1) return [];
-    return searchBoard(query, people, posts, calls, extra, pulled, you?.trade).slice(0, 8);
+    try {
+      return searchBoard(query, people, posts, calls, extra, pulled, you?.trade).slice(0, 8);
+    } catch {
+      return [];
+    }
   }, [debouncedQ, people, posts, calls, extra, pulled, you?.trade]);
 
-  const suggestions = useMemo(
-    () => suggestBoard(debouncedQ, people, calls, [...extra, ...seedListings]),
-    [debouncedQ, people, calls, extra],
-  );
+  const suggestions = useMemo(() => {
+    try {
+      const listings = [...(Array.isArray(extra) ? extra : []), ...seedListings];
+      return suggestBoard(debouncedQ, people, calls, listings);
+    } catch {
+      return [];
+    }
+  }, [debouncedQ, people, calls, extra]);
 
   useEffect(() => {
     if (variant === "page") setQ(qParam);
