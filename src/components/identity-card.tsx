@@ -3,6 +3,7 @@ import { MapPin, CheckCircle2, Hammer, ShieldCheck, Calendar } from "lucide-reac
 import { Portrait } from "@/components/portrait";
 import { availabilityLabel, cardName, rankLabel } from "@/lib/format";
 import { reputation } from "@/lib/reputation";
+import { useForge } from "@/lib/store";
 import type { CardLayout, Person, Vouch } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -30,6 +31,8 @@ export function IdentityCard({
   const score = reputation(person, vouches);
   const tickets = person.tickets.slice(0, 4);
   const open = person.availability === "open";
+  const youId = useForge((s) => s.youId);
+  const mine = youId === person.id;
 
   if (layout === "ticket") {
     return (
@@ -113,15 +116,31 @@ export function IdentityCard({
         </div>
       </div>
 
-      <div className="flex items-center justify-between border-t border-[#e8e2d8] px-5 py-3 text-xs">
+      <div className="flex items-center justify-between gap-3 border-t border-[#e8e2d8] px-5 py-3 text-xs">
         <span className="text-muted-foreground">Built on reputation. Verified by work.</span>
-        <Link
-          to={share ? "/p/$id" : "/card/$id"}
-          params={{ id: person.id }}
-          className="font-medium text-[#a65d3f] hover:underline"
-        >
-          {share ? "View profile" : "Share card"} →
-        </Link>
+        <span className="flex shrink-0 items-center gap-3">
+          {mine ? (
+            <Link to="/wallet" className="font-medium text-[#a65d3f] hover:underline">
+              Tickets & vouches →
+            </Link>
+          ) : (
+            <Link
+              to="/p/$id"
+              params={{ id: person.id }}
+              hash="wallet"
+              className="font-medium text-[#a65d3f] hover:underline"
+            >
+              Tickets & vouches →
+            </Link>
+          )}
+          <Link
+            to={share ? "/p/$id" : "/card/$id"}
+            params={{ id: person.id }}
+            className="font-medium text-[#a65d3f] hover:underline"
+          >
+            {share ? "View profile" : "Share card"} →
+          </Link>
+        </span>
       </div>
     </article>
   );

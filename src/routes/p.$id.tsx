@@ -423,7 +423,7 @@ function ProfilePage() {
         </section>
       ) : null}
 
-      <section className="rounded-xl bg-cream p-4 shadow-[var(--shadow-border)] sm:p-5">
+      <section id="wallet" className="scroll-mt-4 rounded-xl bg-cream p-4 shadow-[var(--shadow-border)] sm:p-5">
         <h2 className="font-display text-2xl tracking-wide">Credential wallet</h2>
         <p className="text-xs text-muted-foreground">
           Verified, pending, or unverified. Issuer, number, issued, expiry. Not a PDF resume.
