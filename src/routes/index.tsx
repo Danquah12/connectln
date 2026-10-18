@@ -160,7 +160,7 @@ function ShopTalk() {
       </div>
 
       {!introDismissed ? (
-        <section className="relative overflow-hidden rounded-2xl bg-ink px-5 py-5 text-cream rise-in">
+        <section className="relative overflow-hidden rounded-xl bg-ink px-4 py-4 text-cream rise-in sm:px-5 sm:py-5">
           <button
             type="button"
             onClick={dismissIntro}
@@ -171,7 +171,8 @@ function ShopTalk() {
           </button>
           <p className="font-display text-2xl tracking-wide sm:text-3xl">Prove what you can do.</p>
           <p className="mt-2 max-w-xl text-sm leading-relaxed text-cream/75">
-            Certified to do. Actually done. Who will vouch. Available when. The card for trades, care, classrooms, and those who served.
+            Certified to do. Actually done. Who will vouch. Available when. That is the card —
+            for trades, care, classrooms, builders, and those who served.
           </p>
           <p className="mt-3 text-xs tracking-wide text-cream/50">
             {you
@@ -285,7 +286,7 @@ function ShopTalk() {
       {live ? <LiveTalk onDone={() => setLive(false)} /> : null}
 
       <form
-        className="rounded-2xl bg-white p-5 shadow-[0_1px_2px_rgba(26,24,20,0.04),0_0_0_1px_rgba(26,24,20,0.06)] rise-in rise-in-2"
+        className="rounded-xl bg-cream p-4 shadow-[var(--shadow-border)] rise-in rise-in-2"
         onSubmit={(e) => {
           e.preventDefault();
           createPost(draft, kind, still);

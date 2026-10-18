@@ -60,7 +60,7 @@ export function PostCard({ post }: { post: Post }) {
   const copy = shopLines(post.headline, post.body);
 
   return (
-    <article id={post.id} className="overflow-hidden rounded-2xl bg-white shadow-[0_1px_2px_rgba(26,24,20,0.04),0_0_0_1px_rgba(26,24,20,0.06)]" data-feed-post="1">
+    <article id={post.id} className="overflow-hidden rounded-xl bg-cream shadow-[var(--shadow-border)]" data-feed-post="1">
       <header className="flex items-start gap-3 px-4 pt-4">
         <Portrait person={author} />
         <div className="min-w-0 flex-1">

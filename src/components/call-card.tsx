@@ -69,7 +69,7 @@ export function CallCard({
   return (
     <article
       id={call.id}
-      className="scroll-mt-20 overflow-hidden rounded-2xl bg-white shadow-[0_1px_2px_rgba(26,24,20,0.04),0_0_0_1px_rgba(26,24,20,0.06)]"
+      className="scroll-mt-20 overflow-hidden rounded-xl bg-cream shadow-[var(--shadow-border)]"
     >
       {call.photo ? (
         <img
