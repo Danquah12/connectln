@@ -72,9 +72,9 @@ function HallPage() {
   return (
     <div className="flex flex-col gap-4">
       <header>
-        <h1 className="font-display text-4xl tracking-wide">Your hall</h1>
+        <h1 className="font-display text-4xl tracking-tight text-ink">Your hall</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          People you have worked with, shops that looked, events with a start time. Not a contact list.
+          People you have actually worked with. Taken, vouched, or on a job together. Not a contact list.
         </p>
       </header>
 
@@ -102,7 +102,7 @@ function HallPage() {
 
       <div className="grid gap-4 lg:grid-cols-[16rem_minmax(0,1fr)]">
         <aside className="flex flex-col gap-3 lg:sticky lg:top-4 lg:self-start">
-          <section className="rounded-xl bg-cream p-4 shadow-[var(--shadow-border)]">
+          <section className="rounded-2xl bg-white p-5 shadow-[0_1px_2px_rgba(26,24,20,0.04),0_0_0_1px_rgba(26,24,20,0.06)]">
             <p className="text-xs tracking-wide text-muted-foreground uppercase">On this board</p>
             <dl className="mt-3 space-y-2 text-sm">
               <Row k="Your people" n={crew.length + taken.length} />
@@ -114,7 +114,7 @@ function HallPage() {
               <Row k="Saved" n={savedPersonIds.length + savedCallIds.length} to="/saved" />
             </dl>
           </section>
-          <section className="rounded-xl bg-cream p-4 shadow-[var(--shadow-border)]">
+          <section className="rounded-2xl bg-white p-5 shadow-[0_1px_2px_rgba(26,24,20,0.04),0_0_0_1px_rgba(26,24,20,0.06)]">
             <p className="text-xs tracking-wide text-muted-foreground uppercase">Shops you follow</p>
             <ul className="mt-3 space-y-2">
               {shops.map((s) => {
@@ -139,7 +139,7 @@ function HallPage() {
         </aside>
 
         <div className="flex min-w-0 flex-col gap-4">
-          <section className="rounded-xl bg-cream p-4 shadow-[var(--shadow-border)]">
+          <section className="rounded-2xl bg-white p-5 shadow-[0_1px_2px_rgba(26,24,20,0.04),0_0_0_1px_rgba(26,24,20,0.06)]">
             <h2 className="font-display text-2xl tracking-wide">Your people</h2>
             <p className="text-xs text-muted-foreground">
               Taken, vouched, or on a job with you. That is the hall — not a friend count.
@@ -177,7 +177,7 @@ function HallPage() {
           {tab === "grow" ? (
             <>
               {pending.length ? (
-                <section className="rounded-xl bg-cream p-4 shadow-[var(--shadow-border)]">
+                <section className="rounded-2xl bg-white p-5 shadow-[0_1px_2px_rgba(26,24,20,0.04),0_0_0_1px_rgba(26,24,20,0.06)]">
                   <h2 className="font-display text-2xl tracking-wide">Invites</h2>
                   <ul className="mt-3 flex flex-col gap-4">
                     {pending.map((inv) => {
@@ -224,7 +224,7 @@ function HallPage() {
                 </p>
               )}
 
-              <section className="rounded-xl bg-cream p-4 shadow-[var(--shadow-border)]">
+              <section className="rounded-2xl bg-white p-5 shadow-[0_1px_2px_rgba(26,24,20,0.04),0_0_0_1px_rgba(26,24,20,0.06)]">
                 <h2 className="font-display text-2xl tracking-wide">Same hall</h2>
                 <p className="text-xs text-muted-foreground">Same class, jobsite, or MOS — not a random alumni dump.</p>
                 <ul className="mt-3 grid gap-3 sm:grid-cols-2">
@@ -254,7 +254,7 @@ function HallPage() {
                 </ul>
               </section>
 
-              <section className="rounded-xl bg-cream p-4 shadow-[var(--shadow-border)]">
+              <section className="rounded-2xl bg-white p-5 shadow-[0_1px_2px_rgba(26,24,20,0.04),0_0_0_1px_rgba(26,24,20,0.06)]">
                 <h2 className="font-display text-2xl tracking-wide">Who looked</h2>
                 <p className="text-xs text-muted-foreground">The shop, and what they were hiring. Not a name with no context.</p>
                 <ul className="mt-3 space-y-3">
@@ -269,7 +269,7 @@ function HallPage() {
                 </ul>
               </section>
 
-              <section className="rounded-xl bg-cream p-4 shadow-[var(--shadow-border)]">
+              <section className="rounded-2xl bg-white p-5 shadow-[0_1px_2px_rgba(26,24,20,0.04),0_0_0_1px_rgba(26,24,20,0.06)]">
                 <h2 className="font-display text-2xl tracking-wide">Upcoming</h2>
                 <p className="text-xs text-muted-foreground">
                   Full calendar on{" "}
@@ -309,7 +309,7 @@ function HallPage() {
               </section>
             </>
           ) : (
-            <section className="rounded-xl bg-cream p-4 shadow-[var(--shadow-border)]">
+            <section className="rounded-2xl bg-white p-5 shadow-[0_1px_2px_rgba(26,24,20,0.04),0_0_0_1px_rgba(26,24,20,0.06)]">
               <h2 className="font-display text-2xl tracking-wide">Catch up</h2>
               <p className="text-xs text-muted-foreground">From people on your jobsites — not a firehose.</p>
               {catchUp.length ? (

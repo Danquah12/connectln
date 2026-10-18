@@ -45,7 +45,7 @@ function ProgramCard({
   href: string;
 }) {
   return (
-    <article className="overflow-hidden rounded-xl bg-cream shadow-[var(--shadow-border)]">
+    <article className="overflow-hidden rounded-2xl bg-white shadow-[0_1px_2px_rgba(26,24,20,0.04),0_0_0_1px_rgba(26,24,20,0.06)]">
       <p className="px-4 pt-4 text-sm leading-relaxed text-ink">{lead}</p>
       <a href={href} target="_blank" rel="noreferrer" className="relative mt-3 block">
         <img src={image} alt="" className="aspect-[5/3] w-full object-cover" />
@@ -74,7 +74,7 @@ function MoneyBrief({ clip, mode }: { clip: MoneyClip; mode: "lead" | "split" | 
   const top = cut > 0 ? clip.blurb.slice(0, cut + 1) : clip.blurb;
   const rest = cut > 0 ? clip.blurb.slice(cut + 2) : "";
   return (
-    <article data-feed-post="" className="overflow-hidden rounded-xl bg-cream shadow-[var(--shadow-border)]">
+    <article data-feed-post="" className="overflow-hidden rounded-2xl bg-white shadow-[0_1px_2px_rgba(26,24,20,0.04),0_0_0_1px_rgba(26,24,20,0.06)]">
       <div className="px-4 pt-4">
         <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
           {clip.group} · {clip.source}
@@ -250,7 +250,7 @@ function CallsPage() {
 
       {posting && you && shop ? (
         <form
-          className="flex flex-col gap-3 rounded-xl bg-cream p-4 shadow-[var(--shadow-border)]"
+          className="flex flex-col gap-3 rounded-2xl bg-white p-4 shadow-[0_1px_2px_rgba(26,24,20,0.04),0_0_0_1px_rgba(26,24,20,0.06)]"
           onSubmit={(e) => {
             e.preventDefault();
             if (!title.trim()) return;
@@ -297,7 +297,7 @@ function CallsPage() {
         </form>
       ) : null}
 
-      <section className="rounded-xl bg-cream p-3 shadow-[var(--shadow-border)] sm:p-4">
+      <section className="rounded-2xl bg-white p-3 shadow-[0_1px_2px_rgba(26,24,20,0.04),0_0_0_1px_rgba(26,24,20,0.06)] sm:p-4">
         <div className="flex flex-wrap gap-1.5">
           {TRADE_GROUPS.map((h) => (
             <button
@@ -383,7 +383,7 @@ function CallsPage() {
             foot="Teachers and faculty stay on this hall."
             href="https://portal.expediteconsults.com/umd"
           />
-          <article className="overflow-hidden rounded-xl bg-cream shadow-[var(--shadow-border)]">
+          <article className="overflow-hidden rounded-2xl bg-white shadow-[0_1px_2px_rgba(26,24,20,0.04),0_0_0_1px_rgba(26,24,20,0.06)]">
             <p className="px-4 pt-4 text-sm leading-relaxed text-ink">
               These are people on the University of Maryland campus board. The courses, dining, and shuttles are on Digital Campus.{" "}
               <a href="https://portal.expediteconsults.com/umd" target="_blank" rel="noreferrer" className="font-medium">
@@ -487,7 +487,7 @@ function CallsPage() {
                 href={TRUEPLACE}
                 target="_blank"
                 rel="noreferrer"
-                className="overflow-hidden rounded-xl bg-cream shadow-[var(--shadow-border)] hover:shadow-[var(--shadow-border-hover)]"
+                className="overflow-hidden rounded-2xl bg-white shadow-[0_1px_2px_rgba(26,24,20,0.04),0_0_0_1px_rgba(26,24,20,0.06)] hover:shadow-[var(--shadow-border-hover)]"
               >
                 <img src={home.photo} alt="" className="aspect-[5/2] w-full object-cover" />
                 <div className="p-4">
