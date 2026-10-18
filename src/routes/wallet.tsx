@@ -152,7 +152,7 @@ function WalletPage() {
           return (
             <li
               key={t.id}
-              className="flex flex-wrap items-start gap-3 rounded-2xl bg-white p-4 shadow-[0_1px_2px_rgba(26,24,20,0.04),0_0_0_1px_rgba(26,24,20,0.06)]"
+              className="flex flex-wrap items-start gap-3 rounded-xl bg-cream p-3 shadow-[var(--shadow-border)]"
             >
               <TicketPlate ticket={t} />
               <div className="min-w-0 flex-1">
@@ -255,7 +255,7 @@ function WalletPage() {
       </ul>
 
       {open ? (
-        <form onSubmit={submit} className="rounded-2xl bg-white p-4 shadow-[0_1px_2px_rgba(26,24,20,0.04),0_0_0_1px_rgba(26,24,20,0.06)]">
+        <form onSubmit={submit} className="rounded-xl bg-cream p-4 shadow-[var(--shadow-border)]">
           <h2 className="font-display text-2xl tracking-wide">Add a ticket</h2>
           <div className="mt-3 grid gap-3 sm:grid-cols-2">
             <div className="flex flex-col gap-1.5 sm:col-span-2">
@@ -321,7 +321,7 @@ function WalletPage() {
 
 function Stat({ label, value, warn }: { label: string; value: number; warn?: boolean }) {
   return (
-    <div className="rounded-2xl bg-white px-3 py-3 shadow-[0_1px_2px_rgba(26,24,20,0.04),0_0_0_1px_rgba(26,24,20,0.06)]">
+    <div className="rounded-xl bg-cream px-3 py-3 shadow-[var(--shadow-border)]">
       <p className="text-[11px] tracking-wide text-muted-foreground uppercase">{label}</p>
       <p className={cn("font-display text-3xl tabular-nums", warn && "text-brick")}>{value}</p>
     </div>

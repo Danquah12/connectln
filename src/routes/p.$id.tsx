@@ -603,9 +603,6 @@ function ProfilePage() {
       <section className="rounded-xl bg-cream p-4 shadow-[var(--shadow-border)] sm:p-5">
         <h2 className="font-display text-2xl tracking-wide">Vouches</h2>
         <p className="text-xs text-muted-foreground">
-          Each vouch names a shared call, crew, or job. No shared work, no vouch.
-        </p>
-        <p className="text-xs text-muted-foreground">
           Who worked with them, and what they will actually stand behind.
         </p>
         <ul className="mt-4 flex flex-col gap-3">
